@@ -79,3 +79,25 @@ describe('validateTicketForm', () => {
     expect(validateTicketForm(form).errors.deposit).toBe('El abono no puede ser mayor que el total');
   });
 });
+
+import { finalPriceChange } from '../../src/lib/ticket-form.js';
+
+describe('finalPriceChange (price update at delivery)', () => {
+  const one = [{ id: 'i1', garment: 'Jean', fix: 'Ruedo', notes: null, cost: 10000, position: 0 }];
+  const two = [...one, { id: 'i2', garment: 'Blusa', fix: 'Costados', notes: null, cost: 14000, position: 1 }];
+
+  test('same price changes nothing', () => {
+    expect(finalPriceChange(two, 24000)).toEqual({ items: null });
+  });
+  test('a single garment gets the new cost', () => {
+    expect(finalPriceChange(one, 16000)).toEqual({ items: [{ garment: 'Jean', fix: 'Ruedo', notes: null, cost: 16000 }] });
+  });
+  test('several garments get an adjustment line for the increase', () => {
+    const { items } = finalPriceChange(two, 30000);
+    expect(items.at(-1)).toEqual({ garment: 'Ajuste', fix: 'Ajuste de precio al entregar', notes: null, cost: 6000 });
+    expect(items).toHaveLength(3);
+  });
+  test('lowering the price of several garments must go through Editar', () => {
+    expect(finalPriceChange(two, 20000)).toEqual({ error: 'Para bajar el valor usa Editar' });
+  });
+});

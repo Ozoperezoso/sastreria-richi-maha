@@ -67,3 +67,37 @@ export async function createTicket(form) {
     p_items: form.items,
   }));
 }
+
+/** One ticket with its garment lines. */
+export async function getTicket(id) {
+  const ticket = unwrap(await supabase.from('ticket_overview').select('*').eq('id', id).maybeSingle());
+  if (!ticket) return null;
+  const items = unwrap(await supabase.from('ticket_items').select('*').eq('ticket_id', id).order('position'));
+  return { ticket, items };
+}
+
+/** Names for "created by / updated by" and the assignment choice. */
+export async function profileNames() {
+  const rows = unwrap(await supabase.from('profiles').select('id, full_name'));
+  return Object.fromEntries(rows.map((p) => [p.id, p.full_name]));
+}
+
+export async function updateTicket(id, patch) {
+  const rows = unwrap(await supabase.from('tickets').update(patch).eq('id', id).select('id'));
+  if (!rows.length) throw new Error('No se pudo guardar el arreglo');
+}
+
+/** Replaces the garment lines: inserts the new ones first so a failure never leaves a ticket empty. */
+export async function replaceItems(ticketId, items) {
+  const old = unwrap(await supabase.from('ticket_items').select('id').eq('ticket_id', ticketId));
+  unwrap(await supabase.from('ticket_items').insert(items.map((item, position) => ({
+    ticket_id: ticketId, garment: item.garment, fix: item.fix ?? '', notes: item.notes || null,
+    cost: item.cost, position,
+  }))));
+  if (old.length) unwrap(await supabase.from('ticket_items').delete().in('id', old.map((i) => i.id)));
+}
+
+export async function deleteTicket(id) {
+  const rows = unwrap(await supabase.from('tickets').delete().eq('id', id).select('id'));
+  if (!rows.length) throw new Error('No se pudo eliminar el arreglo');
+}

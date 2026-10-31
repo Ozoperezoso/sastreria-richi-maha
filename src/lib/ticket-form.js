@@ -42,3 +42,18 @@ export function validateTicketForm(form) {
     },
   };
 }
+
+/**
+ * Price update at delivery (the price often goes up once the work is done).
+ * Returns the full replacement item list, null when nothing changes, or an error.
+ * @param {{garment, fix, notes, cost}[]} items  current items in position order
+ * @param {number} finalValue
+ */
+export function finalPriceChange(items, finalValue) {
+  const total = items.reduce((sum, item) => sum + item.cost, 0);
+  if (finalValue === total) return { items: null };
+  const plain = items.map(({ garment, fix, notes, cost }) => ({ garment, fix, notes, cost }));
+  if (plain.length === 1) return { items: [{ ...plain[0], cost: finalValue }] };
+  if (finalValue < total) return { error: 'Para bajar el valor usa Editar' };
+  return { items: [...plain, { garment: 'Ajuste', fix: 'Ajuste de precio al entregar', notes: null, cost: finalValue - total }] };
+}

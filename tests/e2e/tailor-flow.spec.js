@@ -45,3 +45,29 @@ test('saving with missing data points at the fields to fix', async ({ page }) =>
   await expect(page.getByText('Elige o escribe el cliente')).toBeVisible();
   await expect(page.getByText('Escribe la prenda')).toBeVisible();
 });
+
+test('tailor takes a ticket from received to delivered', async ({ page }) => {
+  await login(page, 'claudia');
+  await page.locator('a.tag', { hasText: 'LAURA CIRO' }).click();
+  await expect(page.getByRole('heading', { name: 'LAURA CIRO' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Empezar' }).click();
+  await expect(page.locator('.head')).toContainText('En proceso');
+
+  await page.getByRole('button', { name: 'Marcar listo' }).click();
+  await page.getByRole('radio', { name: 'B', exact: true }).check();
+  await page.getByRole('button', { name: 'Guardar ubicación' }).click();
+  await expect(page.locator('.head')).toContainText('Listo para entregar');
+  await expect(page.getByText('Ubicación B')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Entregar' }).click();
+  await page.getByLabel('¿Quién recogió? (opcional)').fill('Laura');
+  await page.getByLabel('Valor final').fill('15.000');
+  await expect(page.locator('dialog[open]').getByLabel('Pagado completo')).toBeChecked();
+  await page.getByRole('button', { name: 'Confirmar entrega' }).click();
+
+  await expect(page.locator('.head')).toContainText('Entregado');
+  await expect(page.getByText('Recogió Laura')).toBeVisible();
+  await expect(page.locator('.money')).toContainText('$15.000');
+  await expect(page.locator('.money')).toContainText('Pagado');
+});

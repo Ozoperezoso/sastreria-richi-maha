@@ -19,3 +19,6 @@ Thumbs.db
 test-results/
 playwright-report/
 .playwright-mcp/
+
+# Local build notes and test output
+.superpowers/

@@ -1,0 +1,15 @@
+# Customer data: never commit (public repo)
+*.csv
+exports/
+
+# Secrets
+.env
+.env.*
+
+# Build / deps
+node_modules/
+dist/
+
+# OS
+desktop.ini
+Thumbs.db

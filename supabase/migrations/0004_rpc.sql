@@ -115,7 +115,8 @@ begin
   from public.profiles p
   left join public.ticket_overview o on o.assigned_to = p.id
   where p.role = 'tailor'
-  group by p.id, p.full_name
+  group by p.id, p.full_name, p.active
+  having p.active or count(o.id) > 0
   order by p.full_name;
 end;
 $$;

@@ -1,6 +1,6 @@
 -- create_ticket, search_customers, admin_totals (plan Task 4). Relies on supabase/seed.sql.
 begin;
-select plan(17);
+select plan(18);
 
 -- ---------- admin_totals (run first: later tests add tickets) ----------
 set local request.jwt.claims to '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
@@ -25,6 +25,11 @@ select is(
   (select open_count from public.admin_totals(public.today_bogota() - 7, public.today_bogota())
    where tailor_name = 'Claudia Alvarez'),
   1, 'open tickets are counted per tailor');
+
+select is(
+  (select count(*)::int from public.admin_totals(public.today_bogota() - 7, public.today_bogota())
+   where tailor_name = 'Usuario Inactivo'),
+  0, 'inactive tailors without tickets are not listed');
 
 -- ---------- create_ticket as claudia, assigning to alexander ----------
 reset role;

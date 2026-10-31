@@ -101,3 +101,46 @@ export async function deleteTicket(id) {
   const rows = unwrap(await supabase.from('tickets').delete().eq('id', id).select('id'));
   if (!rows.length) throw new Error('No se pudo eliminar el arreglo');
 }
+
+/** Admin: money and counts per tailor for a date range (admin_totals). */
+export async function adminTotals(from, to) {
+  return unwrap(await supabase.rpc('admin_totals', { p_from: from, p_to: to }));
+}
+
+/** Admin: number of tickets in each status. */
+export async function statusCounts(statuses) {
+  const counts = await Promise.all(statuses.map(async (status) => {
+    const { count, error } = await supabase.from('tickets').select('id', { count: 'exact', head: true }).eq('status', status);
+    if (error) throw new Error(error.message);
+    return [status, count];
+  }));
+  return Object.fromEntries(counts);
+}
+
+export async function overdueTickets(limit = 50) {
+  return unwrap(await supabase.from('ticket_overview').select('*').eq('overdue', true)
+    .order('due_on', { ascending: true }).limit(limit));
+}
+
+const EXPORT_PAGE = 500;
+
+/** Admin "Todos": filtered tickets, newest first. Pass page (0-based) for 500-row pages. */
+export async function listAllTickets({ tailor = '', statuses = [], from = '', to = '' } = {}, page = 0) {
+  let query = supabase.from('ticket_overview').select('*');
+  if (tailor) query = query.eq('assigned_to', tailor);
+  if (statuses.length) query = query.in('status', statuses);
+  if (from) query = query.gte('received_on', from);
+  if (to) query = query.lte('received_on', to);
+  return unwrap(await query.order('number', { ascending: false }).order('suffix')
+    .range(page * EXPORT_PAGE, page * EXPORT_PAGE + EXPORT_PAGE - 1));
+}
+
+/** Every page of listAllTickets, for the CSV export. */
+export async function exportTickets(filters) {
+  const rows = [];
+  for (let page = 0; ; page++) {
+    const batch = await listAllTickets(filters, page);
+    rows.push(...batch);
+    if (batch.length < EXPORT_PAGE) return rows;
+  }
+}

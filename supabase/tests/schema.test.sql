@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 
 select has_table('public', 'profiles', 'profiles table exists');
 select has_table('public', 'customers', 'customers table exists');
@@ -36,6 +36,9 @@ select is((select overdue from public.ticket_overview where number = 90001), tru
 
 select is((select items_summary from public.ticket_overview where number = 90001), 'Jean, Blusa',
   'items_summary joins garments in position order');
+
+select is((select fixes_summary from public.ticket_overview where number = 90001), 'Ruedo, Costados',
+  'fixes_summary joins fixes in position order');
 
 update public.tickets set paid_in_full = true where number = 90001;
 select is((select balance from public.ticket_overview where number = 90001), 0, 'paid_in_full zeroes balance');

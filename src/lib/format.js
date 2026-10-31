@@ -47,3 +47,11 @@ export function addDays(iso, days) {
 export const displayNumber = ({ number, suffix }) => (suffix ? `${number}-${suffix}` : String(number));
 export const statusLabel = (status) => STATUS_LABELS[status] ?? status;
 export const locationLabel = (location) => LOCATION_LABELS[location] ?? location ?? '';
+
+/** Monday of the week containing `iso` (yyyy-mm-dd). */
+export function startOfWeek(iso) {
+  const day = new Date(`${iso}T00:00:00Z`).getUTCDay(); // 0 = Sunday
+  return addDays(iso, -((day + 6) % 7));
+}
+
+export const startOfMonth = (iso) => `${iso.slice(0, 7)}-01`;

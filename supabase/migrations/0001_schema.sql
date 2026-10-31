@@ -91,6 +91,7 @@ select
   c.phone as customer_phone,
   p.full_name as assigned_name,
   coalesce(i.items_summary, '') as items_summary,
+  coalesce(i.fixes_summary, '') as fixes_summary,
   case when t.warranty then 0 else coalesce(i.items_total, 0) end::integer as total,
   case when t.warranty or t.paid_in_full then 0
        else coalesce(i.items_total, 0) - t.deposit end::integer as balance,
@@ -100,6 +101,7 @@ join public.customers c on c.id = t.customer_id
 join public.profiles p on p.id = t.assigned_to
 left join lateral (
   select string_agg(it.garment, ', ' order by it.position) as items_summary,
+         string_agg(nullif(it.fix, ''), ', ' order by it.position) as fixes_summary,
          sum(it.cost) as items_total
   from public.ticket_items it
   where it.ticket_id = t.id

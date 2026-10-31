@@ -51,3 +51,16 @@ describe('dates and labels', () => {
     expect(locationLabel('B')).toBe('B');
   });
 });
+
+import { startOfWeek, startOfMonth } from '../../src/lib/format.js';
+
+describe('period starts', () => {
+  test('weeks start on Monday', () => {
+    expect(startOfWeek('2026-10-31')).toBe('2026-10-26'); // Saturday → Monday
+    expect(startOfWeek('2026-10-26')).toBe('2026-10-26'); // Monday stays
+    expect(startOfWeek('2026-11-01')).toBe('2026-10-26'); // Sunday belongs to the week that started Monday
+  });
+  test('months start on the 1st', () => {
+    expect(startOfMonth('2026-10-31')).toBe('2026-10-01');
+  });
+});

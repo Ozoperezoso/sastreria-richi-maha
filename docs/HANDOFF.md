@@ -1,110 +1,110 @@
-# Handoff: what's done and what's left
+# Entrega: qué está hecho y qué falta
 
-Status on 2026-10-31. Branch `build/v1`, not merged to `main`.
-Spec: `docs/superpowers/specs/2026-10-31-sastreria-app-design.md`. Plan: `docs/superpowers/plans/2026-10-31-sastreria-app.md` (15 tasks).
+Estado al 31/10/2026. Rama `build/v1`, todavía no unida a `main`.
+Especificación: `docs/superpowers/specs/2026-10-31-sastreria-app-design.md`. Plan: `docs/superpowers/plans/2026-10-31-sastreria-app.md` (15 tareas).
 
-## Where things stand
+## Dónde estamos
 
-| Plan task | State |
+| Tarea del plan | Estado |
 |---|---|
-| 1–14: scaffold, database, security rules, RPCs, `admin-users` function, importer, all screens, test suite | **Done**, locally |
-| Final whole-branch review | **Not done**: it was started and stopped before it reported |
-| 15: production setup, import, deploy | **Not started**: waiting for Rodrigo's go-ahead |
+| 1–14: base del proyecto, base de datos, reglas de seguridad, funciones RPC, función `admin-users`, importador, todas las pantallas, pruebas | **Hecho**, en local |
+| Revisión final de toda la rama | **Sin hacer**: se inició y se detuvo antes de dar resultados |
+| 15: configuración de producción, importación y publicación | **Sin empezar**: espera la autorización de Rodrigo |
 
-Every test passed at the last run: database (pgTAP) 47, unit 53, integration 15, end-to-end 13.
-Nothing exists in the cloud yet. Supabase and Cloudflare accounts are connected, but no project has been created.
+En la última ejecución pasaron todas las pruebas: base de datos (pgTAP) 47, unitarias 53, integración 15, de extremo a extremo 13.
+Todavía no hay nada en la nube. Las cuentas de Supabase y Cloudflare están conectadas, pero no se ha creado ningún proyecto.
 
-## Run it locally
+## Cómo ejecutarlo en local
 
-Requirements: Node 22+, Docker Desktop **running**.
+Requisitos: Node 22 o superior, Docker Desktop **abierto y en ejecución**.
 
 ```bash
 npm install
-npm run db:start        # first run downloads the Supabase images
+npm run db:start        # la primera vez descarga las imágenes de Supabase
 cp .env.example .env.local
-npx supabase status -o env   # copy API_URL, PUBLISHABLE_KEY (or ANON_KEY) and SERVICE_ROLE_KEY into .env.local
+npx supabase status -o env   # copia API_URL, PUBLISHABLE_KEY (o ANON_KEY) y SERVICE_ROLE_KEY en .env.local
 npm run dev             # http://localhost:5173
 ```
 
-Test users from `supabase/seed.sql` (local only), all with password `test1234`:
-- `alexander` and `claudia`: tailors.
-- `rodrigo`: admin.
-- `inactivo`: a deactivated tailor.
+Usuarios de prueba de `supabase/seed.sql` (solo en local), todos con contraseña `test1234`:
+- `alexander` y `claudia`: sastres.
+- `rodrigo`: administrador.
+- `inactivo`: un sastre desactivado.
 
-To see real data locally, import the sheet. The CSV is **not** in the repo; ask Rodrigo for it.
+Para ver los datos reales en local, importa la hoja. El CSV **no** está en el repositorio; pídeselo a Rodrigo.
 
 ```bash
 node scripts/import/run.js "Arreglos Modisteria - BD_Registros.csv" --dry-run
 node scripts/import/run.js "Arreglos Modisteria - BD_Registros.csv" --commit
 ```
 
-Tests:
+Pruebas:
 
 ```bash
-npm run db:reset && npm run db:test   # database rules (needs seed-only data)
-npm test                               # unit
-npm run test:int                       # integration (local stack)
-npm run test:e2e                       # browser, phone viewport
+npm run db:reset && npm run db:test   # reglas de la base de datos (necesita solo los datos de prueba)
+npm test                               # unitarias
+npm run test:int                       # integración (usa la base de datos local)
+npm run test:e2e                       # navegador, tamaño de teléfono
 ```
 
-**Watch out:**
-- `npm run test:e2e` and `npm run db:reset` **wipe the local database** back to the seed. Re-import afterwards if you need the real data.
-- If you add a new Edge Function, run `npx supabase stop && npx supabase start`. The local function server only sees function folders that existed when it started.
+**Cuidado:**
+- `npm run test:e2e` y `npm run db:reset` **borran la base de datos local** y la dejan solo con los datos de prueba. Si necesitas los datos reales, vuelve a importar la hoja.
+- Si agregas una nueva función Edge, ejecuta `npx supabase stop && npx supabase start`. El servidor local de funciones solo ve las carpetas de funciones que existían cuando arrancó.
 
-## Remaining work
+## Lo que falta
 
-### 1. Final review (do this first)
+### 1. Revisión final (hazla primero)
 
-Review `git diff 5a91df3..build/v1`, excluding `package-lock.json`, against the spec. Highest priority is **security**: spec §4 says the *database* enforces permissions, not the UI. Try to break that as a tailor calling the API directly, for example:
-- changing restricted columns on the other tailor's ticket;
-- editing `profiles`, such as making yourself admin;
-- misusing `create_ticket`, which is `SECURITY DEFINER`;
-- getting access as an inactive or anonymous user.
+Revisa `git diff 5a91df3..build/v1`, sin `package-lock.json`, comparándolo con la especificación. Lo más importante es la **seguridad**: la sección 4 de la especificación dice que los permisos los aplica *la base de datos*, no las pantallas. Intenta romperlo haciéndote pasar por un sastre que llama a la API directamente, por ejemplo:
+- cambiar columnas restringidas en el arreglo del otro sastre;
+- editar `profiles`, por ejemplo para volverte administrador;
+- usar mal `create_ticket`, que es `SECURITY DEFINER`;
+- obtener acceso como usuario inactivo o anónimo.
 
-Also check the plan's five "Review Focus" items.
+Revisa también los cinco puntos de "Review Focus" del plan.
 
-Rules live in:
+Las reglas están en:
 - `supabase/migrations/0002_rules.sql`
 - `supabase/migrations/0003_security.sql`
 - `supabase/migrations/0004_rpc.sql`
 - `supabase/functions/admin-users/index.ts`
 
-Fix anything serious with a failing test first, then the fix.
+Corrige cualquier problema serio escribiendo primero una prueba que falle y luego la corrección.
 
-### 2. Plan Task 15: go live (only with Rodrigo's OK)
+### 2. Tarea 15 del plan: publicar (solo con la autorización de Rodrigo)
 
-Follow plan Task 15. Three pieces in it **don't exist yet** and must be written:
-- `scripts/bootstrap-admin.js`: creates the first admin (`rodrigo`) in production. It prompts for the password in the terminal; the password must never go in code or chat.
-- `docs/OPERACION.md`: a short **Spanish** guide for the admin covering logging in, creating users, the weekly CSV export, and restoring a paused Supabase project.
-- `.env.production.local`: production keys, git-ignored. Pass it to the importer with `--env .env.production.local`.
+Sigue la tarea 15 del plan. Tres piezas **todavía no existen** y hay que escribirlas:
+- `scripts/bootstrap-admin.js`: crea el primer administrador (`rodrigo`) en producción. Pide la contraseña en la terminal; la contraseña nunca debe ir en el código ni en el chat.
+- `docs/OPERACION.md`: una guía corta **en español** para el administrador: cómo entrar, crear usuarios, exportar el CSV cada semana y reactivar un proyecto de Supabase pausado.
+- `.env.production.local`: las claves de producción, ignorado por git. Pásalo al importador con `--env .env.production.local`.
 
-Production settings:
-- Supabase region `us-east-1`, free plan.
-- Turn **off** sign-ups in Auth settings. Accounts are created only through the admin screen.
-- Cloudflare Pages: build `npm run build`, output `dist`, environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, Node 22+.
-- Run the import **dry run first** and show the summary to Rodrigo before running `--commit`.
+Configuración de producción:
+- Supabase en la región `us-east-1`, plan gratuito.
+- **Desactiva** los registros (sign-ups) en la configuración de Auth. Las cuentas se crean solo desde la pantalla de administración.
+- Cloudflare Pages: comando de compilación `npm run build`, carpeta de salida `dist`, variables de entorno `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`, Node 22 o superior.
+- Haz primero la **simulación** de la importación (`--dry-run`) y muéstrale el resumen a Rodrigo antes de ejecutar `--commit`.
 
-### 3. Open data question for Rodrigo
+### 3. Pregunta pendiente para Rodrigo sobre los datos
 
-8 tickets in the sheet have a delivery date earlier than their received date: **613, 885, 1092, 1199, 1858, 1932, 1947, 2536**. They're probably typos. They import as they are; correct the sheet first if Rodrigo wants them fixed.
+8 arreglos de la hoja tienen la fecha de entrega anterior a la de recibido: **613, 885, 1092, 1199, 1858, 1932, 1947, 2536**. Seguramente son errores de digitación. Se importan tal como están; si Rodrigo quiere corregirlos, hay que arreglar la hoja antes.
 
-## Decisions made during the build that differ from or add to the plan
+## Decisiones tomadas durante la construcción que cambian o amplían el plan
 
-Read these before changing related code:
-- **`create_ticket` is `SECURITY DEFINER`** (the plan said invoker). The tailor who receives a garment must be able to add items to a ticket assigned to the other tailor, and item RLS would block that. It checks for an active user itself; a trigger (`tickets_assignee_check`) makes sure tickets go only to active tailors.
-- **Deactivating a user** bans them in Auth and also hides all data through RLS. The app checks the session on every screen change and shows "Usuario inactivo".
-- **Importer:**
-  - Reads Google Sheets serial dates (e.g. `46225` = 22/07/2026); 1,111 delivery dates were stored that way.
-  - For tickets not fully paid, the final payment is folded into `deposit`, so the balance shows what's really owed.
-  - It isn't transactional; re-running it is safe because existing ticket numbers are skipped.
-- **Price at delivery:** with one garment, its cost changes. With several, an "Ajuste" line is added for the increase. Lowering a price goes through "Editar".
-- **CSV export uses `;`** because Excel set to Spanish (Colombia) expects it, and starts with a UTF-8 BOM so accents display correctly.
-- **List search** (number, name or phone) ignores the "Mis arreglos/Todos" and status filters, so a customer's ticket is always found at pickup.
-- **Customers:** any active user can correct a customer's name or phone.
-- **Warranty tickets** show total and balance $0, even when they have a deposit.
-- Migrations `0001`–`0005` were edited in place during the build. That's fine because they were never deployed; once in production, only add new migrations.
+Léelas antes de modificar el código relacionado:
+- **`create_ticket` es `SECURITY DEFINER`** (el plan decía invoker). El sastre que recibe la prenda tiene que poder agregar prendas a un arreglo asignado al otro sastre, y las reglas de las prendas lo impedirían. La función verifica por sí misma que el usuario esté activo, y un trigger (`tickets_assignee_check`) asegura que los arreglos solo se asignen a sastres activos.
+- **Desactivar un usuario** lo bloquea en Auth y además le oculta todos los datos mediante RLS. La app revisa la sesión en cada cambio de pantalla y muestra "Usuario inactivo".
+- **Importador:**
+  - Lee las fechas que Google Sheets guarda como número de serie (por ejemplo, `46225` = 22/07/2026); 1.111 fechas de entrega venían así.
+  - En los arreglos que no están pagados por completo, el pago final se suma al `deposit` (abono), para que el saldo muestre lo que realmente se debe.
+  - No es transaccional; volver a ejecutarlo es seguro porque salta los números de arreglo que ya existen.
+- **Precio al entregar:** si hay una sola prenda, cambia su valor. Si hay varias, se agrega una línea "Ajuste" por la diferencia. Para bajar un precio se usa "Editar".
+- **El CSV exportado usa `;`** porque Excel configurado en español (Colombia) lo espera así, y empieza con un BOM UTF-8 para que las tildes se vean bien.
+- **La búsqueda de la lista** (número, nombre o teléfono) ignora los filtros "Mis arreglos/Todos" y de estado, para que el arreglo de un cliente siempre aparezca al momento de entregarlo.
+- **Clientes:** cualquier usuario activo puede corregir el nombre o teléfono de un cliente.
+- **Los arreglos en garantía** muestran total y saldo en $0, aunque tengan abono.
+- Las migraciones `0001`–`0005` se editaron directamente durante la construcción. No hay problema porque nunca se publicaron; una vez en producción, solo se deben agregar migraciones nuevas.
 
-## Rules for this repo
+## Reglas de este repositorio
 
-- The repo is **public**. Never commit CSVs, `.env*` files (except `.env.example`), exports, or anything with customer names or phones. `.gitignore` covers these; check `git status` before every commit anyway.
-- UI text is Spanish only. Money is COP with no decimals, shown as `$10.000`. Dates show as `d/mm/yyyy`.
+- El repositorio es **público**. Nunca subas archivos CSV, archivos `.env*` (excepto `.env.example`), exportaciones ni nada con nombres o teléfonos de clientes. El `.gitignore` los cubre; de todas formas, revisa `git status` antes de cada commit.
+- Los textos de la app van solo en español. El dinero es en pesos colombianos sin decimales, mostrado como `$10.000`. Las fechas se muestran como `d/mm/aaaa`.

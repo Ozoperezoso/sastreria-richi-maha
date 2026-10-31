@@ -144,3 +144,19 @@ export async function exportTickets(filters) {
     if (batch.length < EXPORT_PAGE) return rows;
   }
 }
+
+/** Admin: every user, active or not. */
+export async function listProfiles() {
+  return unwrap(await supabase.from('profiles').select('id, username, full_name, role, active').order('full_name'));
+}
+
+/**
+ * Admin user management through the admin-users Edge Function.
+ * @param {'create'|'reset_password'|'set_active'} action
+ */
+export async function adminUsers(action, payload) {
+  const { data, error } = await supabase.functions.invoke('admin-users', { body: { action, ...payload } });
+  if (!error) return data;
+  const body = await error.context?.json?.().catch(() => null);
+  throw new Error(body?.error ?? 'No se pudo completar la acción');
+}

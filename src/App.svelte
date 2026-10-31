@@ -1,1 +1,79 @@
-<h1>Sastrería Richi-Maha</h1>
+<script>
+  import { onMount } from 'svelte';
+  import { session, initSession, recheck, signOut } from './lib/session.svelte.js';
+  import { router, startRouter, navigate } from './lib/router.svelte.js';
+  import { isAdmin } from './lib/permissions.js';
+  import Login from './routes/Login.svelte';
+  import Inicio from './routes/Inicio.svelte';
+  import NuevoArreglo from './routes/NuevoArreglo.svelte';
+  import Detalle from './routes/Detalle.svelte';
+  import AdminPanel from './routes/AdminPanel.svelte';
+  import AdminTodos from './routes/AdminTodos.svelte';
+  import AdminUsuarios from './routes/AdminUsuarios.svelte';
+
+  const SCREENS = {
+    inicio: Inicio, nuevo: NuevoArreglo, detalle: Detalle,
+    panel: AdminPanel, todos: AdminTodos, usuarios: AdminUsuarios,
+  };
+
+  onMount(() => {
+    initSession();
+    startRouter(() => { if (session.user) recheck(); });
+    const onVisible = () => { if (document.visibilityState === 'visible' && session.user) recheck(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  });
+
+  // Admin screens are only for the admin; anyone else is sent to the list.
+  $effect(() => {
+    if (session.profile && router.admin && !isAdmin(session.profile)) navigate('/');
+  });
+
+  const Screen = $derived(SCREENS[router.name] ?? Inicio);
+  const admin = $derived(isAdmin(session.profile));
+</script>
+
+{#if session.loading}
+  <p class="loading muted">Cargando…</p>
+{:else if !session.profile}
+  <Login />
+{:else}
+  <header class="topbar">
+    <a class="shop" href="#/">Sastrería Richi-Maha</a>
+    <span class="who">{session.profile.full_name}</span>
+    <button class="logout" onclick={signOut}>Salir</button>
+  </header>
+  {#if admin}
+    <nav class="adminnav" aria-label="Administración">
+      <a href="#/admin" aria-current={router.name === 'panel' ? 'page' : undefined}>Panel</a>
+      <a href="#/admin/todos" aria-current={router.name === 'todos' ? 'page' : undefined}>Todos los arreglos</a>
+      <a href="#/admin/usuarios" aria-current={router.name === 'usuarios' ? 'page' : undefined}>Usuarios</a>
+      <a href="#/" aria-current={router.name === 'inicio' ? 'page' : undefined}>Pendientes</a>
+    </nav>
+  {/if}
+  {#if !router.admin || admin}
+    {#key router.path}<Screen params={router.params} />{/key}
+  {/if}
+{/if}
+
+<style>
+  .loading { text-align: center; padding-top: 30vh; }
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.6rem 1rem; background: var(--indigo); color: #fff;
+    border-bottom: 2px dashed var(--thread);
+  }
+  .shop { color: #fff; font-weight: 750; text-decoration: none; margin-right: auto; }
+  .who { font-size: 0.875rem; opacity: 0.85; }
+  .logout {
+    min-height: 36px; padding: 0 0.75rem; border-radius: var(--radius-control);
+    border: 1px solid rgba(255, 255, 255, 0.35); background: transparent; color: #fff; cursor: pointer;
+  }
+  .adminnav { display: flex; gap: 0.25rem; overflow-x: auto; padding: 0.5rem 1rem; background: var(--indigo-soft); }
+  .adminnav a {
+    white-space: nowrap; padding: 0.4rem 0.75rem; border-radius: 999px;
+    text-decoration: none; color: var(--indigo); font-weight: 600; font-size: 0.925rem;
+  }
+  .adminnav a[aria-current='page'] { background: var(--indigo); color: #fff; }
+</style>

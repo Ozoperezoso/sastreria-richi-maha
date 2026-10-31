@@ -20,6 +20,10 @@ test('tailor creates a ticket for a new customer with two garments', async ({ pa
   await expect(page.getByText('Arreglo guardado')).toBeVisible();
   await expect(page.locator('.bignumber .num')).toHaveText(/^\d+$/);
   await expect(page.getByText('Total $24.000, saldo $19.000')).toBeVisible();
+
+  await page.goto('/#/');
+  await page.getByLabel('Buscar arreglos').fill('jose munoz');
+  await expect(page.locator('a.tag', { hasText: 'José Muñoz' })).toBeVisible();
 });
 
 test('a returning customer is found without typing accents', async ({ page }) => {

@@ -35,3 +35,35 @@ export async function listTickets({ q = '', mine = false, statuses = OPEN_STATUS
     .order('number', { ascending: true })
     .limit(limit));
 }
+
+/** Customer picker: up to 8 matches by name or phone. */
+export async function searchCustomers(q) {
+  if (q.trim().length < 2) return [];
+  return unwrap(await supabase.rpc('search_customers', { q, max_results: 8 }));
+}
+
+/** Active tailors, for the "assigned to" choice. */
+export async function listTailors() {
+  return unwrap(await supabase.from('profiles').select('id, full_name')
+    .eq('role', 'tailor').eq('active', true).order('full_name'));
+}
+
+/**
+ * @param {{customer: {id?: string, name: string, phone?: string}, received_on: string, due_on?: string,
+ *          assigned_to: string, deposit: number, warranty: boolean, notes?: string,
+ *          items: {garment: string, fix: string, notes?: string, cost: number}[]}} form
+ */
+export async function createTicket(form) {
+  return unwrap(await supabase.rpc('create_ticket', {
+    p_customer_id: form.customer.id ?? null,
+    p_customer_name: form.customer.id ? null : form.customer.name,
+    p_customer_phone: form.customer.id ? null : form.customer.phone || null,
+    p_received_on: form.received_on,
+    p_due_on: form.due_on || null,
+    p_assigned_to: form.assigned_to,
+    p_deposit: form.deposit,
+    p_warranty: form.warranty,
+    p_notes: form.notes || null,
+    p_items: form.items,
+  }));
+}

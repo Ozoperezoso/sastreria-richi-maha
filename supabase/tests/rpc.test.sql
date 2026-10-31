@@ -1,6 +1,6 @@
 -- create_ticket, search_customers, admin_totals (plan Task 4). Relies on supabase/seed.sql.
 begin;
-select plan(15);
+select plan(17);
 
 -- ---------- admin_totals (run first: later tests add tickets) ----------
 set local request.jwt.claims to '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
@@ -72,6 +72,10 @@ select is((select name from public.search_customers('munoz') where phone = '3112
   'search ignores accents and case');
 select is((select name from public.search_customers('311 234')), 'MARÍA MUÑOZ',
   'phone search ignores spaces');
+
+insert into public.customers (name) select 'ZZLIMITE ' || g from generate_series(1, 12) g;
+select is((select count(*)::int from public.search_customers('zzlimite')), 8, 'search returns 8 customers by default');
+select is((select count(*)::int from public.search_customers('zzlimite', 30)), 12, 'max_results raises the limit');
 
 reset role;
 select * from finish();

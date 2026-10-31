@@ -71,8 +71,8 @@ $$;
 revoke execute on function public.create_ticket(uuid, text, text, date, date, uuid, integer, boolean, text, jsonb) from public, anon;
 grant execute on function public.create_ticket(uuid, text, text, date, date, uuid, integer, boolean, text, jsonb) to authenticated;
 
--- Up to 8 customers matching a name fragment (accent/case-insensitive) or phone digits.
-create function public.search_customers(q text) returns setof public.customers
+-- Up to max_results (default 8) customers matching a name fragment (accent/case-insensitive) or phone digits.
+create function public.search_customers(q text, max_results integer default 8) returns setof public.customers
 language sql stable security invoker set search_path = '' as $$
   with input as (
     select lower(public.immutable_unaccent(trim(coalesce(q, '')))) as txt,
@@ -89,10 +89,10 @@ language sql stable security invoker set search_path = '' as $$
     and (strpos(c.search_text, t.txt) > 0
          or (length(t.digits) >= 3 and strpos(c.search_text, t.digits) > 0))
   order by extensions.similarity(c.search_text, t.txt) desc, c.name
-  limit 8
+  limit least(greatest(coalesce(max_results, 8), 1), 50)
 $$;
-revoke execute on function public.search_customers(text) from public, anon;
-grant execute on function public.search_customers(text) to authenticated;
+revoke execute on function public.search_customers(text, integer) from public, anon;
+grant execute on function public.search_customers(text, integer) to authenticated;
 
 -- Admin dashboard figures per tailor for a date range (spec §5 Panel).
 create function public.admin_totals(p_from date, p_to date)

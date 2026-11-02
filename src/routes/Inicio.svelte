@@ -85,6 +85,17 @@
     }
   }
   const next = $derived(toFinish[0] ?? null);
+  // Summary tiles: what is late, what is promised for today, what is waiting to be picked up.
+  const lateCount = $derived(toFinish.filter((t) => t.overdue).length);
+  const todayCount = $derived(toFinish.filter((t) => t.due_on === today).length);
+
+  /** A tile opens its list (the tab on phones) and scrolls to it. */
+  function jumpTo(which) {
+    chooseTab(which === 'entregar' ? 'entregar' : 'terminar');
+    requestAnimationFrame(() => {
+      document.getElementById(which === 'entregar' ? 'h-entregar' : 'h-terminar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
   const queue = $derived(toFinish.slice(1));
   const firstUpcoming = $derived(queue.findIndex((t) => t.due_on && daysBetween(today, t.due_on) >= 0));
   const nextDays = $derived(next?.due_on ? daysBetween(today, next.due_on) : null);
@@ -170,6 +181,18 @@
       <ul class="list">{#each tickets as ticket (ticket.id)}<li><TicketCard {ticket} /></li>{/each}</ul>
     {/if}
   {:else}
+    <nav class="summary" aria-label="Resumen">
+      <button class="tile tile-late" onclick={() => jumpTo('terminar')} aria-label="{lateCount} vencidos, ver la lista">
+        {#key lateCount}<b class="narrow" in:fly={{ y: -8, duration: 240 }}>{lateCount}</b>{/key}<span>Vencidos</span>
+      </button>
+      <button class="tile tile-today" onclick={() => jumpTo('terminar')} aria-label="{todayCount} para hoy, ver la lista">
+        {#key todayCount}<b class="narrow" in:fly={{ y: -8, duration: 240 }}>{todayCount}</b>{/key}<span>Para hoy</span>
+      </button>
+      <button class="tile tile-ready" onclick={() => jumpTo('entregar')} aria-label="{toDeliver.length} por recoger, ver la lista">
+        {#key toDeliver.length}<b class="narrow" in:fly={{ y: -8, duration: 240 }}>{toDeliver.length}</b>{/key}<span>Por recoger</span>
+      </button>
+    </nav>
+
     <div class="tabs" role="tablist" aria-label="Qué hacer">
       <span class="pill" class:right={tab === 'entregar'} aria-hidden="true"></span>
       <button role="tab" aria-selected={tab === 'terminar'} onclick={() => chooseTab('terminar')}>
@@ -312,6 +335,21 @@
   .segmented button { min-height: 40px; border: 0; border-radius: 999px; background: transparent; font-weight: 600; color: #3b4a44; cursor: pointer; }
   .segmented button[aria-pressed='true'] { background: var(--indigo); color: #fff; font-weight: 750; }
 
+  /* Resumen: tres recuadros que llevan a su lista. */
+  .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+  .tile {
+    display: grid; justify-items: start; align-content: start; gap: 0.15rem; padding: 0.65rem 0.75rem; min-height: 64px;
+    border: 0; border-radius: 14px; font: inherit; text-align: left; cursor: pointer;
+    transition: transform var(--fast) var(--ease), filter var(--fast);
+  }
+  .tile:hover { filter: brightness(0.97); }
+  .tile:active { transform: scale(0.97); }
+  .tile b { display: inline-block; font-size: 1.75rem; line-height: 1; }
+  .tile span { font-size: 0.875rem; font-weight: 700; line-height: 1.2; }
+  .tile-late { background: var(--overdue-soft); color: var(--overdue); }
+  .tile-today { background: var(--thread-soft); color: #7a5a00; }
+  .tile-ready { background: var(--ready-soft); color: var(--ready); box-shadow: inset 0 0 0 1px #d3e6da; }
+
   /* Pestañas: una marca verde que se desliza a la elegida. */
   .tabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: #e1e7e4; }
   .tabs .pill { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px;
@@ -332,6 +370,7 @@
   .cols { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
   .col { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
   .col.hidden { display: none; }
+  .col-head h2 { scroll-margin-top: 90px; }
   .col-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
     padding: 1rem 1.1rem 0.75rem; border-bottom: 1px solid var(--line-soft); }
   .col-head .muted { font-size: 0.875rem; }
@@ -377,7 +416,7 @@
   @container (min-width: 960px) {
     .layout { grid-template-columns: minmax(18rem, 30%) minmax(0, 1fr); align-items: start; column-gap: 1.5rem; }
     .next { grid-column: 1; grid-row: 1 / span 3; align-self: start; align-content: start; position: sticky; top: 76px; }
-    .tools, .cols, .tabs, .notice, .skeleton, .empty, .count, .review, .layout > .list { grid-column: 2; }
+    .tools, .summary, .cols, .tabs, .notice, .skeleton, .empty, .count, .review, .layout > .list { grid-column: 2; }
     .tools { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
     .tabs { display: none; }
     .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

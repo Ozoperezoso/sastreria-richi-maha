@@ -118,6 +118,7 @@
 </script>
 
 <main class="inicio" class:solo={searching || !next} class:switched class:to-right={tab === 'entregar'}>
+<div class="layout">
   {#if !searching && next}
     <section class="next" aria-labelledby="next-title">
       <h1 id="next-title">Lo siguiente en tu mesa</h1>
@@ -257,6 +258,7 @@
       </div>
     {/if}
   {/if}
+</div>
 </main>
 
 <Modal bind:open={bulkOpen} title={bulkAction === 'entregado' ? `¿Marcar ${picked.size} como entregados?` : `¿Cancelar ${picked.size} arreglos?`}>
@@ -276,30 +278,33 @@
 </Modal>
 
 <style>
-  .inicio {
-    container-type: inline-size;
-    max-width: 1200px; margin: 0 auto; padding: 1rem 1rem 5rem;
-    display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr);
-  }
+  /* .inicio is the container whose width is queried; .layout is the grid that responds to it.
+     (An element cannot respond to a query on its own width.) */
+  .inicio { container-type: inline-size; max-width: 1200px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+  .layout { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 
   /* Lo siguiente: el bloque verde. */
   .next {
     background: var(--indigo); color: #f5f4ef; border-radius: 24px; padding: 1.25rem;
     display: grid; gap: 1rem;
+    /* Its own width decides the size of the big number, so nothing spills out at any zoom or text size. */
+    container-type: inline-size; min-width: 0;
   }
   .next h1 { font-size: 1.0625rem; font-weight: 600; color: var(--pano-text); }
   .next-link { display: grid; gap: 0.35rem; color: inherit; text-decoration: none; }
-  .next-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
-  .next-number { font-size: 5rem; line-height: 0.9; }
+  .next-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.25rem 1rem; min-width: 0; }
+  .next-number { font-size: min(5rem, 30cqi); line-height: 0.9; }
   .next-days { display: grid; justify-items: end; margin-bottom: 4px; }
-  .next-days .narrow { font-size: 2.5rem; line-height: 1; color: var(--thread); }
+  .next-days .narrow { font-size: min(2.5rem, 15cqi); line-height: 1; color: var(--thread); }
   .next-days.late .narrow { color: #ff8a7e; }
   .next-days-label { font-size: 0.875rem; font-weight: 600; color: var(--pano-text); }
   .next-days.late .next-days-label { color: #ffc4bd; }
-  .next-customer { font-size: 1.375rem; font-weight: 700; line-height: 1.2; }
+  .next-customer { font-size: 1.375rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
   .next-items { font-size: 1rem; color: var(--pano-text); }
-  .next-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 0.5rem; }
-  .next-actions .btn { min-height: 52px; border-radius: 14px; font-size: 1.0625rem; }
+  .next-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .next-actions .next-open { flex: 2 1 9rem; }
+  .next-actions .next-call { flex: 1 1 6rem; }
+  .next-actions .btn { min-height: 52px; border-radius: 14px; font-size: 1.0625rem; white-space: nowrap; }
   .next-open { background: #f5f4ef; border-color: #f5f4ef; color: var(--indigo); font-weight: 750; }
   .next-call { background: transparent; border-color: #6f8e82; color: #f5f4ef; }
   .next-call:hover { border-color: #f5f4ef; }
@@ -346,7 +351,7 @@
   .today .narrow { width: 64px; text-align: center; font-size: 1.05rem; }
 
   .count { font-size: 0.875rem; }
-  .inicio > .list { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+  .layout > .list { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
   .empty { text-align: center; padding: 2rem 1rem; }
   .notice { background: var(--overdue-soft); border-radius: 12px; padding: 0.75rem 1rem; }
   .review { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
@@ -378,14 +383,14 @@
 
   /* Pantalla ancha: lo urgente a la izquierda, las dos colas lado a lado, sin pestañas. */
   @container (min-width: 960px) {
-    .inicio { grid-template-columns: 360px minmax(0, 1fr); align-items: start; column-gap: 1.5rem; }
+    .layout { grid-template-columns: minmax(18rem, 30%) minmax(0, 1fr); align-items: start; column-gap: 1.5rem; }
     .next { grid-column: 1; grid-row: 1 / span 3; align-self: start; align-content: start; position: sticky; top: 76px; }
-    .tools, .cols, .tabs, .notice, .skeleton, .empty, .count, .review, .inicio > .list { grid-column: 2; }
+    .tools, .cols, .tabs, .notice, .skeleton, .empty, .count, .review, .layout > .list { grid-column: 2; }
     .tools { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
     .tabs { display: none; }
     .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
     .col.hidden { display: block; }
-    .inicio.solo { grid-template-columns: minmax(0, 1fr); }
-    .inicio.solo > * { grid-column: 1; }
+    .solo .layout { grid-template-columns: minmax(0, 1fr); }
+    .solo .layout > * { grid-column: 1; }
   }
 </style>

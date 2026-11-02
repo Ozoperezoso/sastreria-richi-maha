@@ -40,7 +40,8 @@
     error = '';
     try {
       const rows = await listTickets({
-        q: listFilters.q, mine: listFilters.mine, statuses: OPEN_STATUSES, userId: session.profile.id,
+        // Every open ticket, not just the first 100: the counts and the queue must be complete.
+        q: listFilters.q, mine: listFilters.mine, statuses: OPEN_STATUSES, userId: session.profile.id, limit: 2000,
       });
       if (id === request) tickets = rows;
     } catch (e) {

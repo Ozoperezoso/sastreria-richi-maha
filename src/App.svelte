@@ -2,8 +2,9 @@
   import { onMount } from 'svelte';
   import { session, initSession, recheck, signOut } from './lib/session.svelte.js';
   import { router, startRouter, navigate } from './lib/router.svelte.js';
-  import { isAdmin } from './lib/permissions.js';
-  import { APP_NAME, SHOP_NAME } from './lib/shop.js';
+  import { isAdmin, isPlatform } from './lib/permissions.js';
+  import { APP_NAME, shopLabel } from './lib/shop.js';
+  import Plataforma from './routes/Plataforma.svelte';
   import Login from './routes/Login.svelte';
   import Inicio from './routes/Inicio.svelte';
   import NuevoArreglo from './routes/NuevoArreglo.svelte';
@@ -41,11 +42,14 @@
 {:else}
   <header class="topbar">
     <div class="bar">
-      <a class="shop" href="#/"><span class="app narrow">{APP_NAME}</span> <span class="place">{SHOP_NAME.replace('Sastrería ', '')}</span></a>
+      <a class="shop" href="#/"><span class="app narrow">{APP_NAME}</span> <span class="place">{shopLabel(session.profile)}</span></a>
       <span class="who" title={session.profile.full_name}>{session.profile.full_name.split(' ')[0]}</span>
       <button class="logout" onclick={signOut}>Salir</button>
     </div>
   </header>
+  {#if isPlatform(session.profile)}
+    <Plataforma />
+  {:else}
   {#if admin}
     <nav class="adminnav" aria-label="Administración">
       <a href="#/admin" aria-current={router.name === 'panel' ? 'page' : undefined}>Panel</a>
@@ -56,6 +60,7 @@
   {/if}
   {#if !router.admin || admin}
     {#key router.path}<Screen params={router.params} />{/key}
+  {/if}
   {/if}
 {/if}
 

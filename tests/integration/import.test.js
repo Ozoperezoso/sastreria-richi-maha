@@ -20,20 +20,20 @@ describe('runImport', () => {
   afterAll(cleanup);
 
   test('dry run reports what it would do and writes nothing', async () => {
-    const result = await runImport({ csvText, mode: 'dry-run', client: db });
+    const result = await runImport({ csvText, mode: 'dry-run', shop: 'la-union', client: db });
     expect(result.summary).toMatchObject({ rows: 10, tickets: 9, customers: 8, merged: 1, suffixed: 1, problems: 0 });
     expect(result.toInsert).toBe(9);
     expect(await fixtureTickets()).toEqual([]);
   });
 
   test('--since imports only newer numbers', async () => {
-    const result = await runImport({ csvText, mode: 'commit', since: 3005, client: db });
+    const result = await runImport({ csvText, mode: 'commit', shop: 'la-union', since: 3005, client: db });
     expect(result.inserted).toBe(3);
     expect((await fixtureTickets()).map((t) => t.display_number)).toEqual(['3006', '3007', '3009']);
   });
 
   test('commit inserts the rest with mapped values', async () => {
-    const result = await runImport({ csvText, mode: 'commit', client: db });
+    const result = await runImport({ csvText, mode: 'commit', shop: 'la-union', client: db });
     expect(result.inserted).toBe(6);
     const tickets = await fixtureTickets();
     expect(tickets.map((t) => t.display_number)).toEqual(
@@ -51,7 +51,7 @@ describe('runImport', () => {
   });
 
   test('running commit again inserts nothing new', async () => {
-    const result = await runImport({ csvText, mode: 'commit', client: db });
+    const result = await runImport({ csvText, mode: 'commit', shop: 'la-union', client: db });
     expect(result.inserted).toBe(0);
     const { count } = await db.from('customers').select('id', { count: 'exact', head: true }).like('name', 'PRUEBA IMPORT%');
     expect(count).toBe(8);

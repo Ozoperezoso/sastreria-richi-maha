@@ -1,7 +1,7 @@
 -- Permission rules (spec §4). Relies on supabase/seed.sql:
 -- ticket 1 → alexander (1111…), ticket 2 → claudia (2222…), admin (3333…) administrador, inactivo (4444…) inactive.
 begin;
-select plan(19);
+select plan(25);
 
 -- ---------- anonymous ----------
 set local role anon;
@@ -78,6 +78,28 @@ select is((select count(*)::int from public.customers), 0, 'inactive user sees n
 select throws_ok(
   $$ insert into public.customers (name) values ('Nuevo') $$,
   '42501', null, 'inactive user cannot create customers');
+
+-- ---------- another shop: Sastrería Prueba Norte ----------
+reset role;
+set local request.jwt.claims to '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}';
+set local role authenticated;
+select is((select count(*)::int from public.tickets), 1, 'a tailor of another shop sees only that shop''s ticket');
+select is((select count(*)::int from public.customers where shop_id = '00000000-0000-0000-0000-00000000a001'), 0,
+  'a tailor of another shop sees no customers of La Unión');
+select throws_ok(
+  $$ select public.create_ticket('cccccccc-0000-0000-0000-000000000001', null, null, null, null,
+       '55555555-5555-5555-5555-555555555555', 0, false, null, '[{"garment":"X"}]') $$,
+  'P0001', 'Cliente no encontrado', 'another shop cannot use a customer of La Unión');
+select is((select number from public.create_ticket(null, 'Cliente Norte', null, null, null,
+       '55555555-5555-5555-5555-555555555555', 0, false, null, '[{"garment":"Camisa"}]')), 2,
+  'each shop has its own ticket numbers');
+
+-- ---------- the platform (El Sastre) ----------
+reset role;
+set local request.jwt.claims to '{"sub":"66666666-6666-6666-6666-666666666666","role":"authenticated"}';
+set local role authenticated;
+select is((select count(*)::int from public.tickets), 0, 'the platform sees no tickets');
+select is((select count(*)::int from public.shops), 2, 'the platform sees every shop');
 
 -- ---------- admin ----------
 reset role;

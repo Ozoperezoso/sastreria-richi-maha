@@ -1,5 +1,9 @@
-// Crea el primer administrador (usuario "admin") en un proyecto de Supabase.
-// Uso: node scripts/bootstrap-admin.js [--env .env.production.local]
+// Crea el usuario de la plataforma El Sastre, o el primer administrador de una sastrería.
+// Uso:
+//   node scripts/bootstrap-admin.js --platform [--username plataforma]        → la plataforma (crea y maneja sastrerías)
+//   node scripts/bootstrap-admin.js --shop la-union [--username admin]        → administrador de esa sastrería
+//   [--env .env.production.local]
+// Las sastrerías nuevas se crean después desde la pantalla Plataforma de la app.
 // Pide la contraseña en la terminal, sin mostrarla. La contraseña nunca va en el código ni en archivos.
 import { existsSync } from 'node:fs';
 import { createInterface } from 'node:readline';
@@ -20,8 +24,19 @@ if (!url || !serviceKey) {
   process.exit(1);
 }
 
-const USERNAME = 'admin';
-const FULL_NAME = 'Administrador';
+const arg = (name) => { const i = process.argv.indexOf(name); return i > -1 ? process.argv[i + 1] : undefined; };
+const platform = process.argv.includes('--platform');
+const shopSlug = arg('--shop');
+if (platform === Boolean(shopSlug)) {
+  console.error('Indica --platform o --shop <código>, uno de los dos.');
+  process.exit(1);
+}
+const USERNAME = arg('--username') ?? (platform ? 'plataforma' : 'admin');
+const FULL_NAME = platform ? 'El Sastre' : 'Administrador';
+if (!/^[a-z0-9_]{3,20}$/.test(USERNAME)) {
+  console.error('Usuario inválido: usa minúsculas, números o _ (3 a 20).');
+  process.exit(1);
+}
 
 /** Reads a line without echoing what is typed. */
 function askHidden(question) {
@@ -40,11 +55,21 @@ if (lookupError) {
   process.exit(1);
 }
 if (existing) {
-  console.log('El usuario "admin" ya existe. No se hizo nada.');
+  console.log(`El usuario "${USERNAME}" ya existe. No se hizo nada.`);
   process.exit(0);
 }
 
-const password = await askHidden('Contraseña para "admin" (mínimo 8 caracteres): ');
+let shopId = null;
+if (shopSlug) {
+  const { data: shop } = await db.from('shops').select('id').eq('slug', shopSlug).maybeSingle();
+  if (!shop) {
+    console.error(`No existe una sastrería con el código "${shopSlug}".`);
+    process.exit(1);
+  }
+  shopId = shop.id;
+}
+
+const password = await askHidden(`Contraseña para "${USERNAME}" (mínimo 8 caracteres): `);
 if (password.length < 8) {
   console.error('La contraseña debe tener al menos 8 caracteres.');
   process.exit(1);
@@ -63,7 +88,8 @@ if (createError) {
 }
 
 const { error: profileError } = await db.from('profiles').insert({
-  id: created.user.id, username: USERNAME, full_name: FULL_NAME, role: 'admin', active: true,
+  id: created.user.id, username: USERNAME, full_name: FULL_NAME, role: platform ? 'platform' : 'admin', active: true,
+  shop_id: shopId,
 });
 if (profileError) {
   await db.auth.admin.deleteUser(created.user.id);
@@ -71,5 +97,5 @@ if (profileError) {
   process.exit(1);
 }
 
-console.log('Listo: entra a la app con el usuario "admin" y la contraseña que escribiste.');
-console.log('Desde Usuarios crea las cuentas de los sastres.');
+console.log(`Listo: entra a la app con el usuario "${USERNAME}" y la contraseña que escribiste.`);
+console.log(platform ? 'Desde la pantalla Plataforma crea las sastrerías.' : 'Desde Usuarios crea las cuentas de los sastres.');

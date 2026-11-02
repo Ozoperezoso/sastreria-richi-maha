@@ -15,9 +15,9 @@ async function clear(error = '') {
 
 async function applyUser(user) {
   if (!user) return clear(session.error);
-  // An inactive profile is invisible through RLS, so a missing row also means "inactive".
+  // An inactive profile (or one whose shop was switched off) is invisible through RLS, so a missing row means "inactive".
   const { data: profile } = await supabase
-    .from('profiles').select('id, username, full_name, role, active').eq('id', user.id).maybeSingle();
+    .from('profiles').select('id, username, full_name, role, active, shop_id, shops(name, active)').eq('id', user.id).maybeSingle();
   if (!profile?.active) {
     await clear('Usuario inactivo');
     return false;

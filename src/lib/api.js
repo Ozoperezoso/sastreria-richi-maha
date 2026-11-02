@@ -145,14 +145,20 @@ export async function exportTickets(filters) {
   }
 }
 
-/** Admin: every user, active or not. */
+/** Admin: every user of the shop, active or not. The platform sees every shop's users. */
 export async function listProfiles() {
-  return unwrap(await supabase.from('profiles').select('id, username, full_name, role, active').order('full_name'));
+  return unwrap(await supabase.from('profiles').select('id, username, full_name, role, active, shop_id').order('full_name'));
+}
+
+/** Platform: every shop. A shop's own users only ever see their own shop. */
+export async function listShops() {
+  return unwrap(await supabase.from('shops').select('id, slug, name, city, active, next_ticket_number, created_at')
+    .order('created_at'));
 }
 
 /**
  * Admin user management through the admin-users Edge Function.
- * @param {'create'|'reset_password'|'set_active'} action
+ * @param {'create'|'reset_password'|'set_active'|'create_shop'|'set_shop_active'} action
  */
 export async function adminUsers(action, payload) {
   const { data, error } = await supabase.functions.invoke('admin-users', { body: { action, ...payload } });

@@ -33,8 +33,8 @@ select is(
 
 -- ---------- create_ticket as claudia, assigning to alexander ----------
 reset role;
--- sequences are not rolled back between runs, so read the expected next number first
-create temporary table expected on commit drop as select last_value + 1 as next_number from public.ticket_number_seq;
+-- each shop numbers its own tickets; read La Unión's next number first
+create temporary table expected on commit drop as select next_ticket_number as next_number from public.shops where slug = 'la-union';
 grant select on expected to authenticated;
 set local request.jwt.claims to '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
 set local role authenticated;
@@ -45,7 +45,7 @@ select * from public.create_ticket(
   '11111111-1111-1111-1111-111111111111', 5000, false, null,
   '[{"garment":"Jean","fix":"Ruedo","cost":10000},{"garment":"Blusa","fix":"Costados","cost":14000}]');
 
-select is((select number from created), (select next_number::int from expected), 'number is the next value of the shop sequence');
+select is((select number from created), (select next_number::int from expected), 'number is the next number of the caller''s shop');
 select is((select array[total, balance] from created), array[24000, 19000], 'returned row has total and balance');
 select is((select assigned_name from created), 'Alexander Rengifo', 'receiver can assign the ticket to the other tailor');
 select is((select created_by from created), '22222222-2222-2222-2222-222222222222'::uuid, 'created_by is the receiver');

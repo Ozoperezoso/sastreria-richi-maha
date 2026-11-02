@@ -1,6 +1,6 @@
 <script>
   import { session, signIn } from '../lib/session.svelte.js';
-  import { APP_NAME, SHOP_NAME } from '../lib/shop.js';
+  import { APP_NAME } from '../lib/shop.js';
 
   let username = $state('');
   let password = $state('');
@@ -17,9 +17,9 @@
 <main class="login">
   <div class="brand">
     <div class="brand-text">
-      <p class="shop">{SHOP_NAME}</p>
+      <p class="shop">Para sastrerías</p>
       <h1 class="narrow">{APP_NAME}</h1>
-      <p class="hint">Entra con el usuario que te dio el administrador.</p>
+      <p class="hint">Entra con el usuario que te dio el administrador de tu sastrería.</p>
     </div>
     <hr class="seam ruler" aria-hidden="true" />
   </div>

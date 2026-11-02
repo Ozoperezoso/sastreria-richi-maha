@@ -87,7 +87,6 @@
   const next = $derived(toFinish[0] ?? null);
   const queue = $derived(toFinish.slice(1));
   const firstUpcoming = $derived(queue.findIndex((t) => t.due_on && daysBetween(today, t.due_on) >= 0));
-  const toCollect = $derived(toDeliver.reduce((sum, t) => sum + Math.max(0, t.balance ?? 0), 0));
   const nextDays = $derived(next?.due_on ? daysBetween(today, next.due_on) : null);
 
   async function load() {
@@ -209,9 +208,6 @@
         {#if !toDeliver.length}
           <p class="col-empty muted">No hay arreglos listos en el estante.</p>
         {:else}
-          {#if toCollect > 0}
-            <p class="collect"><span>Por cobrar en el estante</span><b class="narrow num">{formatCOP(toCollect)}</b></p>
-          {/if}
           <ul class="list">
             {#each toDeliver as ticket (ticket.id)}<li out:slide={{ duration: 280 }}><TicketCard {ticket} mode="waiting" showTailor={!listFilters.mine} /></li>{/each}
           </ul>
@@ -340,10 +336,6 @@
     padding: 1rem 1.1rem 0.75rem; border-bottom: 1px solid var(--line-soft); }
   .col-head .muted { font-size: 0.875rem; }
   .col-empty { padding: 1.25rem 1.1rem; }
-  .collect { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
-    margin: 0.75rem 1.1rem; padding: 0.7rem 0.9rem; border-radius: 12px; background: var(--ready-soft); }
-  .collect span { font-weight: 700; color: var(--ready); }
-  .collect b { font-size: 1.6rem; }
 
   .list { list-style: none; margin: 0; padding: 0; }
   .search ~ * { min-width: 0; }

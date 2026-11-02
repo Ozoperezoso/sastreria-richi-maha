@@ -6,7 +6,7 @@ Fecha: 2026-11-02 · Maqueta: https://claude.ai/artifact/8KEtZytQPsD3sw7cgHX98V 
 - **Sastres (Alexander, Claudia):** en su teléfono, de pie en el mostrador, y en el computador compartido del taller.
 - **Tarea principal:** registrar un arreglo en menos de un minuto y copiar el número a la boleta de papel.
 - **Lo que más importa:** qué hago ahora, qué está vencido, qué está listo para entregar y cuánto se cobra.
-- **Admin (Rodrigo):** plata por semana/mes y por sastre, atrasados, descargar CSV, usuarios.
+- **Administrador:** plata por semana/mes y por sastre, atrasados, descargar CSV, usuarios.
 
 ## Dirección visual: paño verde y cinta métrica
 - Bloques principales en verde paño; el acento es el amarillo de la cinta métrica.

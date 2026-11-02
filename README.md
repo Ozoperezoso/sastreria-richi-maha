@@ -34,7 +34,7 @@ Fill `.env.local` with the values from `npx supabase status`:
 | `npm run db:reset` | Recreate the local database from migrations + seed |
 | `npm run db:test` | Database tests (pgTAP) |
 
-Local test users (seed): `alexander`, `claudia`, `rodrigo` (admin), `inactivo` — password `test1234`.
+Local test users (seed): `alexander`, `claudia`, `admin` (administrador), `inactivo` — password `test1234`.
 
 ## Data privacy
 

@@ -6,7 +6,7 @@ Date: 2026-10-31 · Status: approved in conversation, pending written review
 
 A lightweight web app that replaces the shop's Google Form + Sheet for logging clothing repair jobs.
 
-- **Users:** 1 admin (Rodrigo, supervises only) and 2 tailors (Alexander Rengifo, Claudia Alvarez). One shop.
+- **Users:** 1 admin ("Administrador", supervises only) and 2 tailors (Alexander Rengifo, Claudia Alvarez). One shop.
 - **Success:** every new job is logged in the app from the tailors' phones; the admin can see all work, money and overdue jobs; the full history from the sheet is in the app; running cost is $0/month.
 - **Out of scope for now:** customer SMS/WhatsApp notifications, printed receipts, garment photos, offline mode, multiple shops.
 

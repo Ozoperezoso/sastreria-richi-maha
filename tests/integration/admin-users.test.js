@@ -15,7 +15,7 @@ describe('admin-users function', () => {
 
   beforeAll(async () => {
     await deleteUserByUsername('prueba');
-    admin = await signedIn('rodrigo');
+    admin = await signedIn('admin');
   });
   afterAll(() => deleteUserByUsername('prueba'));
 

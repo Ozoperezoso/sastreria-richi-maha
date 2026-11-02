@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { login } from './helpers.js';
 
 test('admin sees the panel with money per period and overdue tickets', async ({ page }) => {
-  await login(page, 'rodrigo');
+  await login(page, 'admin');
   await page.getByRole('link', { name: 'Panel' }).click();
   await expect(page.getByRole('heading', { name: 'Esta semana' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Este mes' })).toBeVisible();
@@ -12,7 +12,7 @@ test('admin sees the panel with money per period and overdue tickets', async ({ 
 });
 
 test('admin exports the filtered tickets as a CSV for Excel', async ({ page }) => {
-  await login(page, 'rodrigo');
+  await login(page, 'admin');
   await page.getByRole('link', { name: 'Todos los arreglos' }).click();
   await expect(page.locator('a.tag').first()).toBeVisible();
   const downloadPromise = page.waitForEvent('download');
@@ -25,7 +25,7 @@ test('admin exports the filtered tickets as a CSV for Excel', async ({ page }) =
 });
 
 test('admin creates a user, who loses access once deactivated', async ({ page, browser }) => {
-  await login(page, 'rodrigo');
+  await login(page, 'admin');
   await page.getByRole('link', { name: 'Usuarios' }).click();
   await page.getByLabel('Usuario', { exact: true }).fill('prueba');
   await page.getByLabel('Nombre completo').fill('Usuario Prueba');
@@ -47,7 +47,7 @@ test('admin creates a user, who loses access once deactivated', async ({ page, b
 });
 
 test('admin sees the function error when the username exists', async ({ page }) => {
-  await login(page, 'rodrigo');
+  await login(page, 'admin');
   await page.getByRole('link', { name: 'Usuarios' }).click();
   await page.getByLabel('Usuario', { exact: true }).fill('claudia');
   await page.getByLabel('Nombre completo').fill('Otra Claudia');

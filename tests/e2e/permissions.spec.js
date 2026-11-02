@@ -37,7 +37,7 @@ test('assigned tailor edits dates and garments', async ({ page }) => {
 
 test('admin can delete a ticket', async ({ page }) => {
   const id = await seedTicket('PARA BORRAR');
-  await login(page, 'rodrigo');
+  await login(page, 'admin');
   await page.goto(`/#/arreglo/${id}`);
   await expect(page.getByRole('heading', { name: 'PARA BORRAR' })).toBeVisible();
   page.once('dialog', (dialog) => dialog.accept());

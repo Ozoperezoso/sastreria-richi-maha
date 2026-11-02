@@ -1,7 +1,7 @@
 -- Permission rules (spec §4). Relies on supabase/seed.sql:
--- ticket 1 → alexander (1111…), ticket 2 → claudia (2222…), rodrigo (3333…) admin, inactivo (4444…) inactive.
+-- ticket 1 → alexander (1111…), ticket 2 → claudia (2222…), admin (3333…) administrador, inactivo (4444…) inactive.
 begin;
-select plan(16);
+select plan(19);
 
 -- ---------- anonymous ----------
 set local role anon;
@@ -32,6 +32,12 @@ select throws_ok(
 delete from public.tickets where number = 1;
 select is((select count(*)::int from public.tickets where number = 1), 1, 'claudia cannot delete tickets');
 
+-- Ticket numbers come only from create_ticket (plan Review Focus 4), never from a direct insert.
+select throws_ok(
+  $$ insert into public.tickets (number, customer_id, assigned_to, received_on, status)
+     select 999, customer_id, assigned_to, current_date, 'entregado' from public.tickets where number = 1 $$,
+  '42501', null, 'claudia cannot insert tickets directly and pick the number or status');
+
 -- ---------- alexander (assigned tailor) ----------
 reset role;
 set local request.jwt.claims to '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
@@ -46,6 +52,14 @@ select lives_ok(
   'alexander can add garments to his ticket');
 select is((select updated_by from public.tickets where number = 1), '11111111-1111-1111-1111-111111111111'::uuid,
   'updated_by records the acting user');
+
+-- The number is written on the paper receipt; not even the assigned tailor may change it.
+select throws_ok(
+  $$ update public.tickets set number = 777 where number = 1 $$,
+  'P0001', 'El número del arreglo no se puede cambiar', 'alexander cannot renumber his own ticket');
+select throws_ok(
+  $$ update public.tickets set suffix = 'B' where number = 1 $$,
+  'P0001', 'El número del arreglo no se puede cambiar', 'alexander cannot add a suffix to his own ticket');
 
 select throws_ok(
   $$ update public.tickets set status = 'listo', location = null where number = 1 $$,
@@ -65,7 +79,7 @@ select throws_ok(
   $$ insert into public.customers (name) values ('Nuevo') $$,
   '42501', null, 'inactive user cannot create customers');
 
--- ---------- rodrigo (admin) ----------
+-- ---------- admin ----------
 reset role;
 set local request.jwt.claims to '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}';
 set local role authenticated;

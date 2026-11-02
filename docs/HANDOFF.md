@@ -9,7 +9,7 @@ Especificación: `docs/superpowers/specs/2026-10-31-sastreria-app-design.md`. Pl
 |---|---|
 | 1–14: base del proyecto, base de datos, reglas de seguridad, funciones RPC, función `admin-users`, importador, todas las pantallas, pruebas | **Hecho**, en local |
 | Revisión final de toda la rama | **Sin hacer**: se inició y se detuvo antes de dar resultados |
-| 15: configuración de producción, importación y publicación | **Sin empezar**: espera la autorización de Rodrigo |
+| 15: configuración de producción, importación y publicación | **Sin empezar**: espera la autorización del administrador |
 
 En la última ejecución pasaron todas las pruebas: base de datos (pgTAP) 47, unitarias 53, integración 15, de extremo a extremo 13.
 Todavía no hay nada en la nube. Las cuentas de Supabase y Cloudflare están conectadas, pero no se ha creado ningún proyecto.
@@ -28,10 +28,10 @@ npm run dev             # http://localhost:5173
 
 Usuarios de prueba de `supabase/seed.sql` (solo en local), todos con contraseña `test1234`:
 - `alexander` y `claudia`: sastres.
-- `rodrigo`: administrador.
+- `admin`: administrador.
 - `inactivo`: un sastre desactivado.
 
-Para ver los datos reales en local, importa la hoja. El CSV **no** está en el repositorio; pídeselo a Rodrigo.
+Para ver los datos reales en local, importa la hoja. El CSV **no** está en el repositorio; pídeselo al administrador.
 
 ```bash
 node scripts/import/run.js "Arreglos Modisteria - BD_Registros.csv" --dry-run
@@ -71,10 +71,10 @@ Las reglas están en:
 
 Corrige cualquier problema serio escribiendo primero una prueba que falle y luego la corrección.
 
-### 2. Tarea 15 del plan: publicar (solo con la autorización de Rodrigo)
+### 2. Tarea 15 del plan: publicar (solo con la autorización del administrador)
 
 Sigue la tarea 15 del plan. Tres piezas **todavía no existen** y hay que escribirlas:
-- `scripts/bootstrap-admin.js`: crea el primer administrador (`rodrigo`) en producción. Pide la contraseña en la terminal; la contraseña nunca debe ir en el código ni en el chat.
+- `scripts/bootstrap-admin.js`: crea el primer administrador (`admin`) en producción. Pide la contraseña en la terminal; la contraseña nunca debe ir en el código ni en el chat.
 - `docs/OPERACION.md`: una guía corta **en español** para el administrador: cómo entrar, crear usuarios, exportar el CSV cada semana y reactivar un proyecto de Supabase pausado.
 - `.env.production.local`: las claves de producción, ignorado por git. Pásalo al importador con `--env .env.production.local`.
 
@@ -82,11 +82,11 @@ Configuración de producción:
 - Supabase en la región `us-east-1`, plan gratuito.
 - **Desactiva** los registros (sign-ups) en la configuración de Auth. Las cuentas se crean solo desde la pantalla de administración.
 - Cloudflare Pages: comando de compilación `npm run build`, carpeta de salida `dist`, variables de entorno `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`, Node 22 o superior.
-- Haz primero la **simulación** de la importación (`--dry-run`) y muéstrale el resumen a Rodrigo antes de ejecutar `--commit`.
+- Haz primero la **simulación** de la importación (`--dry-run`) y muéstrale el resumen al administrador antes de ejecutar `--commit`.
 
-### 3. Pregunta pendiente para Rodrigo sobre los datos
+### 3. Pregunta pendiente para el administrador sobre los datos
 
-8 arreglos de la hoja tienen la fecha de entrega anterior a la de recibido: **613, 885, 1092, 1199, 1858, 1932, 1947, 2536**. Seguramente son errores de digitación. Se importan tal como están; si Rodrigo quiere corregirlos, hay que arreglar la hoja antes.
+8 arreglos de la hoja tienen la fecha de entrega anterior a la de recibido: **613, 885, 1092, 1199, 1858, 1932, 1947, 2536**. Seguramente son errores de digitación. Se importan tal como están; si el administrador quiere corregirlos, hay que arreglar la hoja antes.
 
 ## Decisiones tomadas durante la construcción que cambian o amplían el plan
 

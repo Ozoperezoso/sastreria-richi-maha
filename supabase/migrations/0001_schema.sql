@@ -1,4 +1,4 @@
--- Sastrería Richi-Maha: core schema (spec §3)
+-- El Sastre: core schema (spec §3)
 
 create extension if not exists unaccent with schema extensions;
 create extension if not exists pg_trgm with schema extensions;

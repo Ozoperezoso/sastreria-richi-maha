@@ -1,4 +1,4 @@
-# Sastrería Richi-Maha — Project brief
+# El Sastre — Project brief
 
 Status: **on hold** (decisions captured 2026-10-31). Nothing built yet.
 

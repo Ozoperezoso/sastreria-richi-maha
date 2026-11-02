@@ -55,3 +55,36 @@ export function startOfWeek(iso) {
 }
 
 export const startOfMonth = (iso) => `${iso.slice(0, 7)}-01`;
+
+const WEEKDAYS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const WEEKDAYS_SHORT = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+const utcDate = (iso) => new Date(`${String(iso).slice(0, 10)}T00:00:00Z`);
+
+/** Whole days from `fromIso` to `toIso` (both yyyy-mm-dd); negative when `toIso` is earlier. */
+export function daysBetween(fromIso, toIso) {
+  return Math.round((utcDate(toIso) - utcDate(fromIso)) / 86_400_000);
+}
+
+/** 'lun', 'mar', 'mié'… for the tape measure. */
+export const weekdayShort = (iso) => WEEKDAYS_SHORT[utcDate(iso).getUTCDay()];
+
+/** 'lunes 2 de noviembre'. */
+export function longDate(iso) {
+  const date = utcDate(iso);
+  return `${WEEKDAYS[date.getUTCDay()]} ${date.getUTCDate()} de ${MONTHS[date.getUTCMonth()]}`;
+}
+
+/**
+ * The tape-measure mark for a ticket: days until the promised date (negative when late),
+ * or days waiting on the shelf. `{ mark: '−5', unit: 'días' }`, `{ mark: 'Hoy', unit: '' }`.
+ */
+export function tapeMark(days, { future = 'weekday', iso = null } = {}) {
+  if (days === null || days === undefined) return { mark: '—', unit: 'sin fecha' };
+  if (days === 0) return { mark: 'Hoy', unit: '' };
+  const plural = Math.abs(days) === 1 ? 'día' : 'días';
+  if (days < 0) return { mark: `−${-days}`, unit: plural };
+  if (future === 'weekday' && iso) return { mark: `+${days}`, unit: weekdayShort(iso) };
+  return { mark: String(days), unit: plural };
+}

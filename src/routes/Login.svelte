@@ -1,5 +1,6 @@
 <script>
   import { session, signIn } from '../lib/session.svelte.js';
+  import { APP_NAME, SHOP_NAME } from '../lib/shop.js';
 
   let username = $state('');
   let password = $state('');
@@ -15,29 +16,50 @@
 
 <main class="login">
   <div class="brand">
-    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="10" cy="23" r="3.5"/><circle cx="22" cy="23" r="3.5"/><path d="M12.4 20.4 23 6M19.6 20.4 9 6"/></svg>
-    <h1>Sastrería Richi-Maha</h1>
+    <div class="brand-text">
+      <p class="shop">{SHOP_NAME}</p>
+      <h1 class="narrow">{APP_NAME}</h1>
+      <p class="hint">Entra con el usuario que te dio el administrador.</p>
+    </div>
+    <hr class="seam ruler" aria-hidden="true" />
   </div>
-  <hr class="seam" />
 
-  <form class="panel" onsubmit={submit}>
-    <label class="field">
-      <span>Usuario</span>
-      <input class="input" name="username" autocomplete="username" autocapitalize="none" bind:value={username} required />
-    </label>
-    <label class="field">
-      <span>Contraseña</span>
-      <input class="input" name="password" type="password" autocomplete="current-password" bind:value={password} required />
-    </label>
-    {#if session.error}<p class="error" role="alert">{session.error}</p>{/if}
-    <button class="btn btn-indigo btn-block" type="submit" disabled={busy}>{busy ? 'Entrando…' : 'Entrar'}</button>
-  </form>
+  <div class="side">
+    <form class="form" onsubmit={submit}>
+      <h2>Entrar</h2>
+      <label class="field">
+        <span>Usuario</span>
+        <input class="input" name="username" autocomplete="username" autocapitalize="none" bind:value={username} required />
+      </label>
+      <label class="field">
+        <span>Contraseña</span>
+        <input class="input" name="password" type="password" autocomplete="current-password" bind:value={password} required />
+      </label>
+      {#if session.error}<p class="warning" role="alert">{session.error}</p>{/if}
+      <button class="btn btn-indigo btn-block enter" type="submit" disabled={busy}>{busy ? 'Entrando…' : 'Entrar'}</button>
+      <p class="muted small">¿Olvidaste la contraseña? Pídele al administrador que la cambie. En el computador del taller, toca Salir antes de irte.</p>
+    </form>
+  </div>
 </main>
 
 <style>
-  .login { max-width: 400px; margin: 0 auto; padding: 18vh 1rem 2rem; display: grid; gap: 1.25rem; }
-  .brand { display: flex; align-items: center; gap: 0.75rem; color: var(--indigo); }
-  .brand svg { width: 2.5rem; height: 2.5rem; fill: none; stroke: var(--thread); stroke-width: 2.4; stroke-linecap: round;
-    background: var(--indigo); border-radius: 9px; padding: 4px; }
-  .brand h1 { font-size: 1.35rem; }
+  .login { min-height: 100dvh; display: flex; flex-wrap: wrap; }
+  .brand {
+    flex: 1 1 380px; min-width: 0; background: var(--indigo); color: #f5f4ef;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 2rem; padding: 2.5rem 1.75rem 0; overflow: hidden;
+  }
+  .brand-text { display: grid; gap: 0.6rem; max-width: 420px; }
+  .shop { font-size: 0.9375rem; font-weight: 600; color: var(--pano-text); }
+  h1 { font-size: 4.5rem; line-height: 0.95; }
+  .hint { font-size: 1.0625rem; color: var(--pano-text); }
+  .ruler { height: 56px; margin: 0 -1.75rem; border-radius: 0;
+    background:
+      repeating-linear-gradient(90deg, var(--tape-ink) 0 1.5px, transparent 1.5px 10px) left top / 100% 14px no-repeat,
+      repeating-linear-gradient(90deg, var(--tape-ink) 0 2px, transparent 2px 50px) left top / 100% 26px no-repeat,
+      var(--thread); }
+  .side { flex: 1 1 380px; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; }
+  .form { width: 100%; max-width: 380px; display: grid; gap: 1.1rem; }
+  .form h2 { font-size: 1.75rem; }
+  .enter { min-height: 54px; border-radius: 14px; font-size: 1.0625rem; }
+  .small { font-size: 0.875rem; }
 </style>

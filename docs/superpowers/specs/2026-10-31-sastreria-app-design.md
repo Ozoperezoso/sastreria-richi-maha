@@ -1,4 +1,4 @@
-# Sastrería Richi-Maha — Design spec
+# El Sastre — Design spec
 
 Date: 2026-10-31 · Status: approved in conversation, pending written review
 
@@ -17,7 +17,7 @@ A lightweight web app that replaces the shop's Google Form + Sheet for logging c
 | Front end | Svelte + Vite single-page app, Spanish UI, mobile-first, bundled with no runtime CDN dependencies |
 | Backend | Supabase (free plan, region us-east-1): Postgres, Auth, row-level security (RLS), one Edge Function |
 | Hosting | Cloudflare Pages, free `*.pages.dev` address, auto-deploy on push to `main` |
-| Code | Public GitHub repo `Ozoperezoso/sastreria-richi-maha` |
+| Code | Public GitHub repo `Ozoperezoso/el-sastre` |
 | Local dev | Supabase CLI local stack (Docker) for development and tests |
 
 **Secrets:** the Supabase service-role key exists only in Supabase (for the Edge Function) and in a local untracked `.env` (for the importer). The browser uses only the publishable/anon key; security comes from RLS. Source CSVs and any exports are git-ignored, because the repo is public.

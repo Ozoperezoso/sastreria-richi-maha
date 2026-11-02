@@ -1,4 +1,4 @@
-# Sastrería Richi-Maha Implementation Plan
+# El Sastre Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -36,7 +36,7 @@
 ## File Structure
 
 ```
-sastreria-richi-maha/
+el-sastre/
 ├── package.json, vite.config.js, svelte.config.js, playwright.config.js, index.html, .env.example
 ├── supabase/
 │   ├── config.toml
@@ -285,7 +285,7 @@ sastreria-richi-maha/
     - `displayNumber({number, suffix}) -> '136-B'|'2712'`
     - `statusLabel(status)`, `locationLabel(loc)`
   - `permissions.js`: `isAdmin(profile)`, `canEditCore(profile, ticket)` (admin or `ticket.assigned_to === profile.id`), `canDelete(profile)`.
-- Layout: top bar with the shop name "Sastrería Richi-Maha", the user's name and "Salir"; admin links visible only to the admin; at most 640px wide, centred; tap targets at least 44px.
+- Layout: top bar with the shop name "El Sastre", the user's name and "Salir"; admin links visible only to the admin; at most 640px wide, centred; tap targets at least 44px.
 
 - [ ] **Step 1: Write failing unit tests** for every `format.js` and `permissions.js` example above, including `parseCOPInput('10,5')` and `parseCOPInput('abc')` throwing `'Valor inválido'`.
 - [ ] **Step 2:** `npm test`. Expected: FAIL.
@@ -434,7 +434,7 @@ This task is mostly account setup. For each step, the executor does it via tools
 **Files:**
 - Create: `docs/OPERACION.md` (Spanish admin guide: login, creating users, weekly export, restoring a paused project)
 
-- [ ] **Step 1: Supabase project.** Create the project "sastreria-richi-maha" in org Ozoperezoso, region `us-east-1`, free plan (Supabase MCP `create_project`, or dashboard → New project). Then:
+- [ ] **Step 1: Supabase project.** Create the project "el-sastre" in org Ozoperezoso, region `us-east-1`, free plan (Supabase MCP `create_project`, or dashboard → New project). Then:
   - `npx supabase link --project-ref <ref>`
   - `npx supabase db push`
   - `npx supabase functions deploy admin-users`
@@ -442,12 +442,12 @@ This task is mostly account setup. For each step, the executor does it via tools
   Under Auth settings: disable sign-ups and email confirmations.
 - [ ] **Step 2: Real users.** Create `scripts/bootstrap-admin.js`: run locally with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from `.env.production.local`; it prompts for the password in the terminal (the user types it, never in chat); it creates auth user `rodrigo@sastreria.local` and the profile `{username:'rodrigo', full_name:'Rodrigo', role:'admin', active:true}`; it exits if `rodrigo` already exists. Rodrigo then creates `alexander` and `claudia` in the app.
 - [ ] **Step 3: Import.** Run `node scripts/import/run.js "<BD_Registros.csv>" --dry-run` against production (`.env.production.local`). Show the user the summary and problems, and **wait for their OK**, then run `--commit`. Spot-check 5 tickets in the app against the sheet with the user.
-- [ ] **Step 4: Cloudflare Pages.** Create a Pages project connected to GitHub `Ozoperezoso/sastreria-richi-maha` (dashboard: Workers & Pages → Create → Pages → Connect to Git). Settings:
+- [ ] **Step 4: Cloudflare Pages.** Create a Pages project connected to GitHub `Ozoperezoso/el-sastre` (dashboard: Workers & Pages → Create → Pages → Connect to Git). Settings:
   - Build command `npm run build`, output `dist`.
   - Env `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
   - Node version 22 or higher.
 
-  Confirm `https://sastreria-richi-maha.pages.dev` loads and login works on a phone.
+  Confirm `https://el-sastre.pages.dev` loads and login works on a phone.
 - [ ] **Step 5:** Run Playwright `tailor-flow` against the production URL with a temporary test user, then delete that user and its tickets.
 - [ ] **Step 6:** Write `docs/OPERACION.md`; commit `docs: operation guide`; push. Confirm Cloudflare redeploys.
 - [ ] **Step 7: Switch day (scheduled with the user, after the 2–3 day trial):** fresh export, then `--commit --since <last imported number>`, and the form is retired.

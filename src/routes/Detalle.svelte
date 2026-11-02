@@ -317,7 +317,7 @@
   .row-actions, .modal-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
   .modal-actions { margin-top: 1rem; }
   .stack { display: grid; gap: 0.85rem; }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
   .check { display: flex; align-items: center; gap: 0.5rem; min-height: var(--tap); font-weight: 600; }
   .check input { width: 1.25rem; height: 1.25rem; }
 </style>

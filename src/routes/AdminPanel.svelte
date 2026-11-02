@@ -37,7 +37,7 @@
   const sum = (rows, key) => (rows ?? []).reduce((acc, row) => acc + row[key], 0);
 </script>
 
-<main class="page">
+<main class="page page-wide">
   <h1>Panel</h1>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   {#if loading}
@@ -118,5 +118,5 @@
   .counts li { display: grid; padding: 0.6rem 0.75rem; background: var(--chalk); border-radius: var(--radius-control); font-size: 0.875rem; }
   .counts li span { font-size: 1.4rem; font-weight: 800; color: var(--indigo); }
   .overdue { display: grid; gap: 0.6rem; }
-  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
 </style>

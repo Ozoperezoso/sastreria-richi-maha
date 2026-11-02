@@ -45,7 +45,7 @@
   .lines { display: grid; gap: 0.75rem; }
   .line { border: 1px solid var(--line); border-radius: var(--radius-control); padding: 0.75rem; margin: 0; display: grid; gap: 0.6rem; }
   legend { font-weight: 700; color: var(--indigo); padding: 0 0.3rem; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
   .garment, .fix { grid-column: span 2; }
   @media (min-width: 520px) {
     .garment, .fix { grid-column: span 1; }

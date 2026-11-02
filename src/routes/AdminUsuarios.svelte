@@ -75,7 +75,7 @@
   }
 </script>
 
-<main class="page">
+<main class="page page-wide">
   <h1>Usuarios</h1>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   {#if notice}<p class="notice" role="status">{notice}</p>{/if}

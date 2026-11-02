@@ -16,9 +16,12 @@
 
 <style>
   dialog {
-    width: min(92vw, 480px); border: 0; border-radius: var(--radius-tag); padding: 1.25rem;
-    border-top: 4px solid var(--thread); color: var(--ink);
+    width: min(92vw, 480px); border: 0; border-radius: 24px; padding: 1.5rem; color: var(--ink);
   }
-  dialog::backdrop { background: rgba(25, 42, 68, 0.55); }
-  h2 { margin-bottom: 1rem; }
+  dialog::backdrop { background: rgba(21, 43, 36, 0.6); }
+  h2 { margin-bottom: 1rem; font-size: 1.5rem; }
+  /* En el teléfono la ventana sale desde abajo. */
+  @media (max-width: 600px) {
+    dialog { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 24px 24px 0 0; }
+  }
 </style>

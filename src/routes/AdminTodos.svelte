@@ -60,7 +60,7 @@
   }
 </script>
 
-<main class="page">
+<main class="page page-wide">
   <div class="title">
     <h1>Todos los arreglos</h1>
     <button class="btn btn-indigo" onclick={exportCSV} disabled={exporting}>
@@ -107,7 +107,7 @@
 
 <style>
   .title { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
   .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
   .chip {
     min-height: 36px; padding: 0 0.8rem; border-radius: 999px; border: 1px solid var(--line);
@@ -115,5 +115,5 @@
   }
   .chip[aria-pressed='true'] { background: var(--indigo-soft); border-color: var(--indigo); color: var(--indigo); font-weight: 650; }
   .small { font-size: 0.85rem; }
-  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
 </style>

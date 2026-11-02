@@ -135,19 +135,24 @@
 
 <style>
   form { display: grid; gap: 1rem; }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
   .check { display: flex; align-items: center; gap: 0.5rem; min-height: var(--tap); font-weight: 600; }
   .check input { width: 1.25rem; height: 1.25rem; }
   .money .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 1.05rem; }
   .save { min-height: 52px; font-size: 1.05rem; }
 
-  .done { text-align: center; justify-items: center; padding-top: 3rem; }
+  .done { text-align: center; justify-items: center; padding-top: 2.5rem; }
+  /* El número sale impreso sobre la cinta métrica, para copiarlo a la boleta de papel. */
   .bignumber {
-    display: grid; justify-items: center; padding: 1.5rem 2.5rem 1.75rem;
-    background: var(--indigo); color: var(--thread); border-radius: var(--radius-tag);
-    outline: 2px dashed var(--thread); outline-offset: -8px;
+    display: flex; align-items: baseline; justify-content: center; gap: 0.75rem;
+    width: min(100%, 520px); padding: 2.25rem 1.5rem 1rem; border-radius: 8px;
+    background:
+      repeating-linear-gradient(90deg, var(--tape-ink) 0 1.5px, transparent 1.5px 12px) left top / 100% 16px no-repeat,
+      repeating-linear-gradient(90deg, var(--tape-ink) 0 2.5px, transparent 2.5px 60px) left top / 100% 30px no-repeat,
+      var(--thread);
+    color: var(--ink);
   }
-  .bignumber .label { font-size: 1rem; font-weight: 700; color: #fff; opacity: 0.8; }
-  .bignumber .num { font-size: 4.5rem; font-weight: 850; line-height: 1; letter-spacing: -0.02em; }
+  .bignumber .label { font-size: 1.25rem; font-weight: 700; }
+  .bignumber .num { font-size: clamp(5rem, 22vw, 9rem); font-weight: 800; font-stretch: 68%; line-height: 0.9; }
   .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
 </style>

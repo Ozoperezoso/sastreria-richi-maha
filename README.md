@@ -1,4 +1,4 @@
-# Sastrería Richi-Maha
+# El Sastre
 
 Web app for logging the shop's clothing repairs. Tailors record jobs from their phones; the admin supervises.
 Spec: `docs/superpowers/specs/2026-10-31-sastreria-app-design.md`

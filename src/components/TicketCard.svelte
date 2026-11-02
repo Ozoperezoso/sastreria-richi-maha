@@ -52,7 +52,7 @@
     {#if showTailor}<span class="meta muted">{ticket.assigned_name}</span>{/if}
   </span>
   {#if ticket.status === 'listo' && ticket.location}
-    <span class="loc narrow" aria-hidden="true">{locationLabel(ticket.location)}</span>
+    <span class="loc narrow" class:word={ticket.location.length > 1} aria-hidden="true">{locationLabel(ticket.location)}</span>
   {/if}
 </a>
 
@@ -69,7 +69,9 @@
   .mark { font-size: 1.85rem; line-height: 1; }
   .unit { font-size: 0.75rem; font-weight: 600; }
   .closed .tape { background-color: #d9ded9; }
-  .body { flex: 1; min-width: 0; display: grid; gap: 2px; align-content: center; padding: 0.7rem 1rem 0.7rem 0.9rem; }
+  /* minmax(0, 1fr): without it the grid column grows to the full customer name and slides under the location badge. */
+  .body { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; align-content: center;
+    padding: 0.7rem 1rem 0.7rem 0.9rem; }
   .late .body { background: var(--overdue-soft); }
   .row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
   .customer { font-size: 1.0625rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -86,5 +88,7 @@
     display: flex; align-items: center; justify-content: center; border-radius: 10px;
     background: var(--ready); color: #fff; font-size: 1.25rem;
   }
+  /* Cajón, Bodega: same height as A–E, smaller type so the badge stays narrow. */
+  .loc.word { font-size: 1rem; padding: 0 10px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>

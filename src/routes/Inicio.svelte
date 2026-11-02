@@ -2,11 +2,14 @@
   // Inicio: the most urgent ticket in big type, then the queue split by what to do next.
   // Phone: "Por terminar" and "Por entregar" are tabs. Wide screens: side by side.
   import TicketCard from '../components/TicketCard.svelte';
-  import { listTickets } from '../lib/api.js';
+  import Modal from '../components/Modal.svelte';
+  import { listTickets, updateTicket } from '../lib/api.js';
   import { listFilters } from '../lib/filters.svelte.js';
   import { session } from '../lib/session.svelte.js';
   import { isAdmin } from '../lib/permissions.js';
-  import { OPEN_STATUSES, formatCOP, todayISO, daysBetween, longDate, statusLabel } from '../lib/format.js';
+  import {
+    OPEN_STATUSES, STALE_DAYS, formatCOP, todayISO, daysBetween, longDate, statusLabel, isStale, readySince,
+  } from '../lib/format.js';
 
   let { params } = $props();
 
@@ -22,12 +25,56 @@
   const today = todayISO();
   const searching = $derived(listFilters.q.trim().length > 0);
 
+  // Old backlog (late or on the shelf for more than STALE_DAYS) is kept apart so the daily queue stays about today.
+  const stale = $derived(tickets.filter((t) => isStale(t, today)));
+  const fresh = $derived(tickets.filter((t) => !isStale(t, today)));
   // Earliest promised date first; tickets without a date go last (the query already sorts this way).
-  const toFinish = $derived(tickets.filter((t) => t.status === 'recibido' || t.status === 'en_proceso'));
+  const toFinish = $derived(fresh.filter((t) => t.status === 'recibido' || t.status === 'en_proceso'));
   // Longest on the shelf first: those are the customers to call.
   const toDeliver = $derived(
-    tickets.filter((t) => t.status === 'listo').toSorted((a, b) => String(a.updated_at).localeCompare(String(b.updated_at))),
+    fresh.filter((t) => t.status === 'listo').toSorted((a, b) => readySince(a).localeCompare(readySince(b))),
   );
+  const admin = $derived(isAdmin(session.profile));
+
+  // Admin clean-up of the old backlog: mark several as delivered or cancelled at once.
+  let picked = $state(new Set());
+  let bulkAction = $state(null); // 'entregado' | 'cancelado'
+  let bulkOpen = $state(false);
+  let bulkDone = $state(0);
+  let bulkError = $state('');
+  let bulkBusy = $state(false);
+  const allPicked = $derived(stale.length > 0 && stale.every((t) => picked.has(t.id)));
+
+  function togglePick(id) {
+    const next = new Set(picked);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    picked = next;
+  }
+  function toggleAll() { picked = allPicked ? new Set() : new Set(stale.map((t) => t.id)); }
+  function askBulk(action) { bulkAction = action; bulkError = ''; bulkDone = 0; bulkOpen = true; }
+
+  async function runBulk() {
+    bulkBusy = true;
+    bulkError = '';
+    const chosen = stale.filter((t) => picked.has(t.id));
+    try {
+      for (const t of chosen) {
+        // The real delivery date was never recorded; the promised date stands in so this week's totals stay honest.
+        const patch = bulkAction === 'entregado'
+          ? { status: 'entregado', delivered_on: t.due_on ?? t.received_on }
+          : { status: 'cancelado' };
+        await updateTicket(t.id, patch);
+        bulkDone++;
+      }
+      bulkOpen = false;
+      picked = new Set();
+      await load();
+    } catch (e) {
+      bulkError = `Se guardaron ${bulkDone} de ${chosen.length}. ${e.message}`;
+    } finally {
+      bulkBusy = false;
+    }
+  }
   const next = $derived(toFinish[0] ?? null);
   const queue = $derived(toFinish.slice(1));
   const firstUpcoming = $derived(queue.findIndex((t) => t.due_on && daysBetween(today, t.due_on) >= 0));
@@ -161,7 +208,35 @@
       </section>
     </div>
 
-    {#if !next && !toDeliver.length}
+    {#if stale.length}
+      <details class="review">
+        <summary>
+          <span class="review-title">Por revisar <span class="narrow">{stale.length}</span></span>
+          <span class="muted">Atrasados o listos hace más de {STALE_DAYS} días. Probablemente ya se entregaron y no se anotó.</span>
+        </summary>
+        {#if admin}
+          <div class="bulk">
+            <label class="pick-all"><input type="checkbox" checked={allPicked} onchange={toggleAll} /> Elegir todos</label>
+            <span class="muted">{picked.size} elegidos</span>
+            <button class="btn" disabled={!picked.size} onclick={() => askBulk('entregado')}>Marcar como entregados</button>
+            <button class="btn btn-danger" disabled={!picked.size} onclick={() => askBulk('cancelado')}>Cancelar</button>
+          </div>
+        {/if}
+        <ul class="list">
+          {#each stale as ticket (ticket.id)}
+            <li class:pickable={admin}>
+              {#if admin}
+                <label class="pick"><input type="checkbox" checked={picked.has(ticket.id)} onchange={() => togglePick(ticket.id)}
+                  aria-label="Elegir el arreglo {ticket.display_number}" /></label>
+              {/if}
+              <TicketCard {ticket} mode="waiting" showTailor={!listFilters.mine} />
+            </li>
+          {/each}
+        </ul>
+      </details>
+    {/if}
+
+    {#if !next && !toDeliver.length && !stale.length}
       <div class="empty panel">
         <h2>No hay arreglos</h2>
         <p class="muted">Nada pendiente{listFilters.mine ? ' para ti' : ''}. Registra el próximo cuando llegue un cliente.</p>
@@ -169,6 +244,19 @@
     {/if}
   {/if}
 </main>
+
+<Modal bind:open={bulkOpen} title={bulkAction === 'entregado' ? `¿Marcar ${picked.size} como entregados?` : `¿Cancelar ${picked.size} arreglos?`}>
+  <p>{bulkAction === 'entregado'
+    ? 'Quedarán como entregados con su fecha prometida como fecha de entrega, porque la real no se anotó. No cambia lo que se cobró.'
+    : 'Quedarán como cancelados. Siguen guardados y se pueden ver en Todos los arreglos.'}</p>
+  {#if bulkBusy}<p class="muted" role="status">Guardando {bulkDone} de {picked.size}…</p>{/if}
+  {#if bulkError}<p class="error" role="alert">{bulkError}</p>{/if}
+  <div class="modal-actions">
+    <button class="btn" onclick={() => (bulkOpen = false)} disabled={bulkBusy}>Volver</button>
+    <button class="btn" class:btn-indigo={bulkAction === 'entregado'} class:btn-danger={bulkAction === 'cancelado'}
+      onclick={runBulk} disabled={bulkBusy}>{bulkAction === 'entregado' ? 'Marcar entregados' : 'Cancelar arreglos'}</button>
+  </div>
+</Modal>
 
 <style>
   .inicio {
@@ -236,6 +324,23 @@
   .inicio > .list { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
   .empty { text-align: center; padding: 2rem 1rem; }
   .notice { background: var(--overdue-soft); border-radius: 12px; padding: 0.75rem 1rem; }
+  .review { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+  .review summary { display: grid; gap: 0.2rem; padding: 1rem 1.1rem; cursor: pointer; list-style: none; }
+  .review summary::-webkit-details-marker { display: none; }
+  .review summary::after { content: 'Ver'; justify-self: start; font-weight: 700; color: var(--indigo); font-size: 0.9375rem; }
+  .review[open] summary::after { content: 'Ocultar'; }
+  .review-title { font-size: 1.2rem; font-weight: 800; display: flex; align-items: baseline; gap: 0.5rem; }
+  .review-title .narrow { font-size: 1.5rem; color: var(--muted); }
+  .review summary .muted { font-size: 0.875rem; }
+  .bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; padding: 0.75rem 1.1rem;
+    border-top: 1px solid var(--line-soft); background: #f6f8f7; }
+  .pick-all { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; font-weight: 600; margin-right: auto; }
+  .pickable { display: flex; align-items: stretch; }
+  .pickable :global(.tag) { flex: 1; min-width: 0; }
+  .pick { flex: none; display: flex; align-items: center; justify-content: center; width: 52px;
+    border-bottom: 1px solid var(--line-soft); background: var(--paper); }
+  .pick input, .pick-all input { width: 22px; height: 22px; accent-color: var(--indigo); }
+  .modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
   .skeleton { display: grid; gap: 1px; border-radius: 20px; overflow: hidden; }
   .skeleton span { height: 92px; background: #e3e8e5; }
 
@@ -243,7 +348,7 @@
   @container (min-width: 960px) {
     .inicio { grid-template-columns: 360px minmax(0, 1fr); align-items: start; column-gap: 1.5rem; }
     .next { grid-column: 1; grid-row: 1 / span 3; align-self: start; align-content: start; position: sticky; top: 76px; }
-    .tools, .cols, .tabs, .notice, .skeleton, .empty, .count, .inicio > .list { grid-column: 2; }
+    .tools, .cols, .tabs, .notice, .skeleton, .empty, .count, .review, .inicio > .list { grid-column: 2; }
     .tools { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
     .tabs { display: none; }
     .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

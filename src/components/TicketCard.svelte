@@ -1,7 +1,7 @@
 <script>
   // One ticket as a row on the tape measure: the yellow strip counts days until the promised date
   // (negative when late) or, with mode="waiting", days the garment has waited on the shelf.
-  import { formatCOP, formatDate, todayISO, locationLabel, statusLabel, daysBetween, tapeMark } from '../lib/format.js';
+  import { formatCOP, formatDate, todayISO, locationLabel, statusLabel, daysBetween, tapeMark, readySince } from '../lib/format.js';
 
   let { ticket, showTailor = true, mode = 'due' } = $props();
 
@@ -9,7 +9,7 @@
   const open = $derived(!['entregado', 'cancelado'].includes(ticket.status));
   const waiting = $derived(mode === 'waiting' && ticket.status === 'listo');
   const days = $derived(
-    waiting ? daysBetween(ticket.updated_at, today)
+    waiting ? daysBetween(readySince(ticket), today)
       : ticket.due_on ? daysBetween(today, ticket.due_on) : null,
   );
   const mark = $derived(
@@ -76,6 +76,7 @@
   .number { font-size: 1.125rem; color: var(--muted); flex: none; }
   .items { color: var(--muted); font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .meta { font-size: 0.875rem; }
+  .row.meta { flex-wrap: wrap; row-gap: 0; }
   .state { font-weight: 600; color: #3b4a44; }
   .state.late { color: var(--overdue); font-weight: 700; }
   .balance { font-weight: 700; flex: none; }

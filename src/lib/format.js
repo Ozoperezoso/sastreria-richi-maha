@@ -88,3 +88,34 @@ export function tapeMark(days, { future = 'weekday', iso = null } = {}) {
   if (future === 'weekday' && iso) return { mark: `+${days}`, unit: weekdayShort(iso) };
   return { mark: String(days), unit: plural };
 }
+
+/** Late for longer than this, or ready on the shelf for longer: probably handled but never recorded. */
+export const STALE_DAYS = 30;
+
+/**
+ * When a ready ticket reached the shelf. The sheet never recorded it, so for imported tickets
+ * (legacy row present) the promised date stands in; otherwise the last change.
+ */
+export function readySince(ticket) {
+  if (ticket.legacy) return String(ticket.due_on ?? ticket.received_on).slice(0, 10);
+  return String(ticket.updated_at).slice(0, 10);
+}
+
+/** Old backlog that goes to "Por revisar" instead of the daily queue. */
+export function isStale(ticket, today = todayISO()) {
+  if (ticket.status === 'listo') return daysBetween(readySince(ticket), today) > STALE_DAYS;
+  if (ticket.status === 'recibido' || ticket.status === 'en_proceso') {
+    return Boolean(ticket.due_on) && daysBetween(ticket.due_on, today) > STALE_DAYS;
+  }
+  return false;
+}
+
+/** The promised date in words: 'Se entrega hoy', 'Atrasado 5 días', 'Se entrega en 4 días, viernes 6 de noviembre'. */
+export function dueText(dueIso, today = todayISO()) {
+  if (!dueIso) return 'Sin fecha de entrega';
+  const days = daysBetween(today, dueIso);
+  if (days === 0) return 'Se entrega hoy';
+  if (days < 0) return `Atrasado ${-days} ${days === -1 ? 'día' : 'días'}`;
+  if (days === 1) return 'Se entrega mañana';
+  return `Se entrega en ${days} días, ${longDate(dueIso)}`;
+}

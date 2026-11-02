@@ -43,7 +43,7 @@
   <header class="topbar">
     <div class="bar">
       <a class="shop" href="#/"><span class="app narrow">{APP_NAME}</span> <span class="place">{shopLabel(session.profile)}</span></a>
-      <span class="who" title={session.profile.full_name}>{session.profile.full_name.split(' ')[0]}</span>
+      {#if !isPlatform(session.profile)}<span class="who" title={session.profile.full_name}>{session.profile.full_name.split(' ')[0]}</span>{/if}
       <button class="logout" onclick={signOut}>Salir</button>
     </div>
   </header>

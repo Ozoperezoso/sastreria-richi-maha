@@ -9,7 +9,9 @@
   import { session } from '../lib/session.svelte.js';
   import { navigate } from '../lib/router.svelte.js';
   import { canEditCore, canDelete } from '../lib/permissions.js';
-  import { formatCOP, formatDate, locationLabel, parseCOPInput } from '../lib/format.js';
+  import {
+    formatCOP, formatDate, locationLabel, parseCOPInput, todayISO, daysBetween, tapeMark, dueText,
+  } from '../lib/format.js';
   import { validateTicketForm, finalPriceChange } from '../lib/ticket-form.js';
 
   let { params } = $props();
@@ -34,6 +36,9 @@
 
   const editable = $derived(ticket && canEditCore(session.profile, ticket));
   const open = $derived(ticket && !['entregado', 'cancelado'].includes(ticket.status));
+  // The same promise in words and on the tape as in the Inicio list.
+  const dueDays = $derived(ticket?.due_on ? daysBetween(todayISO(), ticket.due_on) : null);
+  const dueMark = $derived(tapeMark(dueDays, { iso: ticket?.due_on }));
   const editCheck = $derived(editForm ? validateTicketForm(editForm) : null);
 
   async function load() {
@@ -161,6 +166,12 @@
         <h1>{ticket.customer_name}</h1>
         {#if ticket.customer_phone}<a class="num" href="tel:{ticket.customer_phone}">{ticket.customer_phone}</a>{/if}
         <div class="line"><StatusBadge status={ticket.status} /> <span class="muted">{ticket.assigned_name}</span></div>
+        {#if open && ticket.status !== 'listo'}
+          <div class="due" class:late={ticket.overdue} class:today={dueDays === 0}>
+            <span class="tape mini narrow" class:late={ticket.overdue} aria-hidden="true">{dueMark.mark}</span>
+            <span>{dueText(ticket.due_on)}</span>
+          </div>
+        {/if}
       </div>
     </section>
 
@@ -237,7 +248,7 @@
         {#if ticket.picked_up_by}<div>Recogió {ticket.picked_up_by}</div>{/if}
         {#if ticket.notes}<div class="notes">{ticket.notes}</div>{/if}
         <div class="muted small">
-          Registró {names[ticket.created_by] ?? 'importación'}{#if ticket.updated_by && ticket.updated_by !== ticket.created_by}; último cambio de {names[ticket.updated_by]}{/if}
+          {ticket.legacy ? 'Importado de la hoja' : `Registró ${names[ticket.created_by] ?? '—'}`}{#if ticket.updated_by && ticket.updated_by !== ticket.created_by}; último cambio de {names[ticket.updated_by]}{/if}
         </div>
       </section>
 
@@ -296,11 +307,14 @@
   }
   .stub {
     display: grid; align-content: center; justify-items: center; padding: 1rem 1.1rem;
-    background: var(--indigo); color: var(--thread); font-size: 2rem; font-weight: 850;
-    border-right: 2px dashed var(--thread); min-width: 6rem;
+    background: var(--indigo); color: #f5f4ef; font-size: 2.6rem; font-weight: 800; font-stretch: 68%; line-height: 1;
+    min-width: 6rem;
   }
   .stub .label { font-size: 0.8rem; color: #fff; opacity: 0.8; font-weight: 700; }
-  .overdue .stub { background: var(--overdue); color: #fff; border-right-color: #fff; }
+  .due { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 0.9375rem; color: #3b4a44; }
+  .due.late { color: var(--overdue); }
+  .due.today { color: #7a5a00; }
+  .mini { display: inline-flex; align-items: center; min-height: 30px; padding: 0 16px 0 9px; border-radius: 6px; font-size: 1.15rem; }
   .who { padding: 0.85rem 1rem; display: grid; gap: 0.3rem; align-content: center; min-width: 0; }
   .who h1 { font-size: 1.25rem; overflow-wrap: anywhere; }
   .line { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; font-size: 0.9rem; }

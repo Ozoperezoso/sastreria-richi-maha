@@ -134,6 +134,16 @@ describe('mapRows', () => {
     expect(problems).toEqual(['Fila 2 (N° 7): fecha de ingreso inválida "31/02/2026"']);
   });
 
+  test('delivered before it was received: the row is skipped and listed, not imported', () => {
+    const { tickets, skipped, problems, summary } = map(
+      row({ 'Consecutivo': '613', 'Fecha': '21/04/2026', 'Fecha Real de entrega': '20/04/2026' }),
+      row({ 'Consecutivo': '614', 'Fecha': '21/04/2026', 'Fecha Real de entrega': '21/04/2026' }),
+    );
+    expect(tickets.map((t) => t.number)).toEqual([614]);
+    expect(skipped).toEqual(['N° 613: entregado (20/04/2026) antes de recibido (21/04/2026)']);
+    expect(problems).toEqual([]);
+    expect(summary.skipped).toBe(1);
+  });
   test('an unknown tailor is reported', () => {
     const { problems } = map(row({ 'Consecutivo': '8', 'Realizado por': 'Pedro' }));
     expect(problems).toEqual(['Fila 2 (N° 8): sastre desconocido "Pedro"']);

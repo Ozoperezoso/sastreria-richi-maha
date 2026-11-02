@@ -35,20 +35,16 @@ async function loadTailorIds(client) {
 
 /**
  * @param {{csvText: string, mode: 'dry-run'|'commit', since?: number, allowProblems?: boolean, client: any}} options
- * @returns {Promise<{summary: object, problems: string[], checks: object, toInsert: number, inserted: number}>}
+ * @returns {Promise<{summary: object, problems: string[], skipped: string[], toInsert: number, inserted: number}>}
  */
 export async function runImport({ csvText, mode, since = 0, allowProblems = false, client }) {
-  const { customers, tickets, problems, summary } = mapRows(parseCSV(csvText), await loadTailorIds(client));
+  const { customers, tickets, problems, skipped, summary } = mapRows(parseCSV(csvText), await loadTailorIds(client));
 
   const existing = await selectAll(() => client.from('tickets').select('number, suffix'));
   const existingKeys = new Set(existing.map((t) => `${t.number}|${t.suffix}`));
   const pending = tickets.filter((t) => t.number > since && !existingKeys.has(`${t.number}|${t.suffix}`));
 
-  const checks = {
-    deliveredBeforeReceived: tickets.filter((t) => t.delivered_on && t.delivered_on < t.received_on)
-      .map((t) => t.number + (t.suffix ? `-${t.suffix}` : '')),
-  };
-  const result = { summary, problems, checks, toInsert: pending.length, inserted: 0 };
+  const result = { summary, problems, skipped, toInsert: pending.length, inserted: 0 };
   if (mode !== 'commit') return result;
   if (problems.length && !allowProblems) throw new Error(`Hay ${problems.length} problema(s) en el archivo`);
 
@@ -89,7 +85,8 @@ function printReport(result, mode) {
   console.log(`Por estado: ${JSON.stringify(s.byStatus)}`);
   console.log(`Por sastre: ${JSON.stringify(s.byTailor)}`);
   console.log(`Garantías: ${s.warranty} · Número más alto: ${s.maxNumber}`);
-  console.log(`Entregados antes de recibidos (revisar): ${result.checks.deliveredBeforeReceived.join(', ') || 'ninguno'}`);
+  console.log(`Omitidos, entregados antes de recibidos: ${result.skipped.length}`);
+  result.skipped.forEach((line) => console.log(`  - ${line}`));
   console.log(`Problemas: ${result.problems.length}`);
   result.problems.forEach((p) => console.log(`  - ${p}`));
   console.log(mode === 'commit'

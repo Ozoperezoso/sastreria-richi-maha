@@ -22,6 +22,8 @@ export function mapRows(rows, tailorIds) {
   if (missing.length) throw new Error(`Faltan columnas: ${missing.join(', ')}`);
 
   const problems = [];
+  // Rows left out on purpose (not errors): delivered before they were received, a typing error in the sheet.
+  const skipped = [];
   const customers = new Map();
   const parsed = [];
   let dataRows = 0;
@@ -54,6 +56,10 @@ export function mapRows(rows, tailorIds) {
     if (due.error) return fail(due.error);
     const delivered = dateOrProblem('Fecha Real de entrega', 'fecha de entrega');
     if (delivered.error) return fail(delivered.error);
+    if (delivered.value && delivered.value < received) {
+      skipped.push(`N° ${get('Consecutivo')}: entregado (${get('Fecha Real de entrega')}) antes de recibido (${get('Fecha')})`);
+      return;
+    }
 
     const location = LOCATIONS.has(get('Ubicación de la Prenda').toUpperCase()) ? get('Ubicación de la Prenda').toUpperCase() : null;
     const status = delivered.value ? 'entregado' : get('Estado') === 'Listo' ? 'listo' : 'en_proceso';
@@ -123,6 +129,7 @@ export function mapRows(rows, tailorIds) {
     customers: [...customers.values()],
     tickets,
     problems,
+    skipped,
     summary: {
       rows: dataRows,
       tickets: tickets.length,
@@ -134,6 +141,7 @@ export function mapRows(rows, tailorIds) {
       byTailor: count(tickets.map((t) => nameById[t.assigned_to])),
       warranty: tickets.filter((t) => t.warranty).length,
       problems: problems.length,
+      skipped: skipped.length,
     },
   };
 }

@@ -24,9 +24,15 @@
   --ready: #235e3c;
   --ready-soft: #f1f6f2;
 
-  --radius-tag: 18px;
+  --radius-tag: 20px;
   --radius-control: 12px;
   --tap: 44px;
+
+  /* Movimiento: solo para responder a la persona o explicar un cambio. */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 160ms;
+  --base: 240ms;
+  --slow: 420ms;
 
   font-family: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   font-size: 16px;
@@ -67,8 +73,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border: 1.5px solid #c9d3ce; border-radius: 999px;
   background: var(--paper); color: var(--ink); font-weight: 650;
   cursor: pointer; text-decoration: none;
+  transition: transform var(--fast) var(--ease), background-color var(--fast), border-color var(--fast);
 }
 .btn:hover { border-color: var(--indigo); }
+.btn:active:not(:disabled) { transform: scale(0.97); }
 .btn-primary { background: var(--thread); border-color: var(--thread); color: var(--ink); font-weight: 750; }
 .btn-primary:hover { background: #e5b21d; border-color: #e5b21d; }
 .btn-indigo { background: var(--indigo); border-color: var(--indigo); color: #fff; font-weight: 750; }
@@ -97,6 +105,13 @@ textarea.input { min-height: 4.5rem; resize: vertical; }
 fieldset { min-width: 0; }
 .page-wide { max-width: 1200px; }
 .panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-tag); padding: 1.25rem; display: grid; gap: 0.9rem; }
+
+/* Filas de carga: un brillo suave que pasa, para que se note que algo viene. */
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.loading-row {
+  background: linear-gradient(90deg, #e3e8e5 0%, #edf1ef 50%, #e3e8e5 100%) 0 0 / 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

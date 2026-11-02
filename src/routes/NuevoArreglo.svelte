@@ -144,14 +144,23 @@
   .done { text-align: center; justify-items: center; padding-top: 2.5rem; }
   /* El número sale impreso sobre la cinta métrica, para copiarlo a la boleta de papel. */
   .bignumber {
+    position: relative; overflow: hidden;
     display: flex; align-items: baseline; justify-content: center; gap: 0.75rem;
     width: min(100%, 520px); padding: 2.25rem 1.5rem 1rem; border-radius: 8px;
+    color: var(--ink);
+  }
+  /* El único momento de celebración: la cinta entra desde la izquierda y el número sube. */
+  .bignumber::before {
+    content: ''; position: absolute; inset: 0; z-index: 0;
     background:
       repeating-linear-gradient(90deg, var(--tape-ink) 0 1.5px, transparent 1.5px 12px) left top / 100% 16px no-repeat,
       repeating-linear-gradient(90deg, var(--tape-ink) 0 2.5px, transparent 2.5px 60px) left top / 100% 30px no-repeat,
       var(--thread);
-    color: var(--ink);
+    animation: tape-in var(--slow) var(--ease) both;
   }
+  .bignumber > * { position: relative; z-index: 1; animation: number-up 360ms var(--ease) 180ms both; }
+  @keyframes tape-in { from { transform: translateX(-102%); } to { transform: none; } }
+  @keyframes number-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   .bignumber .label { font-size: 1.25rem; font-weight: 700; }
   .bignumber .num { font-size: clamp(5rem, 22vw, 9rem); font-weight: 800; font-stretch: 68%; line-height: 0.9; }
   .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }

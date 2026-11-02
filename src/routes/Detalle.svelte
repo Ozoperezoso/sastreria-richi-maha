@@ -8,6 +8,7 @@
   } from '../lib/api.js';
   import { session } from '../lib/session.svelte.js';
   import { navigate } from '../lib/router.svelte.js';
+  import { notify } from '../lib/toast.svelte.js';
   import { canEditCore, canDelete } from '../lib/permissions.js';
   import {
     formatCOP, formatDate, locationLabel, parseCOPInput, todayISO, daysBetween, tapeMark, dueText,
@@ -56,12 +57,14 @@
   }
   load();
 
-  async function run(action) {
+  /** Saves, reloads, and on success says what was saved in a short notice. */
+  async function run(action, message) {
     busy = true;
     error = '';
     try {
       await action();
       await load();
+      if (message) notify(message);
       return true;
     } catch (e) {
       error = e.message;
@@ -71,12 +74,12 @@
     }
   }
 
-  const start = () => run(() => updateTicket(ticket.id, { status: 'en_proceso' }));
+  const start = () => run(() => updateTicket(ticket.id, { status: 'en_proceso' }), 'Empezado: ahora está en proceso');
 
   function openReady() { location = ticket.location; readyOpen = true; }
   async function saveReady() {
     if (!location) return;
-    if (await run(() => updateTicket(ticket.id, { status: 'listo', location }))) readyOpen = false;
+    if (await run(() => updateTicket(ticket.id, { status: 'listo', location }), `Marcado listo, guardado en ${locationLabel(location)}`)) readyOpen = false;
   }
 
   function openDeliver() {
@@ -98,13 +101,13 @@
       await updateTicket(ticket.id, {
         status: 'entregado', picked_up_by: delivery.pickedUpBy.trim() || null, paid_in_full: delivery.paid,
       });
-    });
+    }, 'Entregado');
     if (ok) deliverOpen = false;
   }
 
   async function cancelTicket() {
     if (!confirm(`¿Cancelar el arreglo N° ${ticket.display_number}?`)) return;
-    await run(() => updateTicket(ticket.id, { status: 'cancelado' }));
+    await run(() => updateTicket(ticket.id, { status: 'cancelado' }), 'Arreglo cancelado');
   }
 
   function openPayment() {
@@ -114,7 +117,7 @@
   async function savePayment() {
     let deposit;
     try { deposit = parseCOPInput(payment.depositText); } catch (e) { payment.error = e.message; return; }
-    if (await run(() => updateTicket(ticket.id, { deposit, paid_in_full: payment.paid }))) payOpen = false;
+    if (await run(() => updateTicket(ticket.id, { deposit, paid_in_full: payment.paid }), 'Pago guardado')) payOpen = false;
   }
 
   async function startEdit() {
@@ -140,7 +143,7 @@
         received_on: v.received_on, due_on: v.due_on, assigned_to: v.assigned_to,
         deposit: v.deposit, warranty: v.warranty, notes: v.notes || null,
       });
-    });
+    }, 'Cambios guardados');
     if (ok) editing = false;
   }
 
@@ -323,7 +326,8 @@
   .items li { display: flex; justify-content: space-between; gap: 1rem; }
   .items li div { display: grid; }
   .money .row { display: flex; justify-content: space-between; }
-  .money .balance { font-size: 1.1rem; }
+  .money .balance { font-size: 1.1rem; align-items: baseline; }
+  .money .balance strong { font-size: 1.75rem; font-weight: 800; font-stretch: 68%; }
   .facts { gap: 0.4rem; }
   .facts .late { color: var(--overdue); font-weight: 700; }
   .notes { white-space: pre-wrap; background: var(--chalk); padding: 0.5rem 0.75rem; border-radius: var(--radius-control); }

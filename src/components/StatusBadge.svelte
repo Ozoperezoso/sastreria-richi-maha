@@ -11,6 +11,7 @@
     display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px;
     font-size: 0.8125rem; font-weight: 700; white-space: nowrap;
     background: #e9edeb; color: #3b4a44;
+    transition: background-color var(--base), color var(--base), box-shadow var(--base);
   }
   .en_proceso { background: var(--indigo-soft); color: var(--indigo); }
   .listo { background: var(--ready-soft); color: var(--ready); box-shadow: inset 0 0 0 1px #bfd9c8; }

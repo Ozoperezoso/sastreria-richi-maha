@@ -35,6 +35,8 @@
   load();
 
   const sum = (rows, key) => (rows ?? []).reduce((acc, row) => acc + row[key], 0);
+  /** Share of the period's money for the bar under each tailor (0–100). */
+  const share = (rows, row) => { const total = sum(rows, 'money_received'); return total ? Math.round((row.money_received / total) * 100) : 0; };
 </script>
 
 <main class="page page-wide">
@@ -45,16 +47,17 @@
   {:else if !error}
     <div class="periods">
       {#each PERIODS as period}
-        <section class="panel money">
+        <section class="money">
           <h2>{period.label}</h2>
           <p class="big num">{formatCOP(sum(totals[period.key], 'money_received'))}</p>
-          <p class="muted small">Dinero recibido: abonos y saldos cobrados</p>
+          <p class="small sub">Plata recibida: abonos y saldos cobrados</p>
           <table>
             <thead><tr><th>Sastre</th><th class="r">Recibido</th><th class="r">Entregas</th></tr></thead>
             <tbody>
               {#each totals[period.key] as row (row.tailor_id)}
                 <tr>
-                  <td>{row.tailor_name}</td>
+                  <td>{row.tailor_name}
+                    <span class="bar" aria-hidden="true"><span style="width: {share(totals[period.key], row)}%"></span></span></td>
                   <td class="r num">{formatCOP(row.money_received)}</td>
                   <td class="r num">{row.delivered_count}</td>
                 </tr>
@@ -107,7 +110,15 @@
 <style>
   .periods { display: grid; gap: 1rem; }
   @media (min-width: 560px) { .periods { grid-template-columns: 1fr 1fr; } }
-  .big { font-size: 2rem; font-weight: 850; color: var(--indigo); letter-spacing: -0.01em; }
+  /* La plata, lo que más mira el administrador, en el bloque verde. */
+  .money { background: var(--indigo); color: #f5f4ef; border-radius: var(--radius-tag); padding: 1.25rem; display: grid; gap: 0.6rem; }
+  .money h2 { font-size: 1.0625rem; font-weight: 600; color: var(--pano-text); }
+  .money .sub { color: var(--pano-text); }
+  .money th { color: var(--pano-text); border-bottom-color: #3e6457; }
+  .money td { border-bottom-color: #3e6457; }
+  .bar { display: block; height: 6px; margin-top: 0.35rem; border-radius: 3px; background: #2c5246; max-width: 220px; }
+  .bar span { display: block; height: 6px; border-radius: 3px; background: var(--thread); transition: width var(--slow) var(--ease); }
+  .big { font-size: 2.75rem; font-weight: 800; font-stretch: 68%; line-height: 1; color: #f5f4ef; }
   .small { font-size: 0.85rem; }
   table { width: 100%; border-collapse: collapse; font-size: 0.925rem; }
   th { text-align: left; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--line); padding: 0.3rem 0; }

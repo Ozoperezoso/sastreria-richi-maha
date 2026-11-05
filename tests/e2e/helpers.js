@@ -30,12 +30,16 @@ export function serviceClient() {
 }
 
 /** Inserts a throwaway ticket for `customerName` and returns its id. */
+// Seed shop (supabase/seed.sql). Rows written with the service role get no default shop.
+const LA_UNION_ID = '00000000-0000-0000-0000-00000000a001';
+
 export async function seedTicket(customerName, assignedTo = ALEXANDER_ID) {
   const db = serviceClient();
-  const { data: customer, error: e1 } = await db.from('customers').insert({ name: customerName }).select('id').single();
+  const { data: customer, error: e1 } = await db.from('customers')
+    .insert({ name: customerName, shop_id: LA_UNION_ID }).select('id').single();
   if (e1) throw e1;
   const { data: ticket, error: e2 } = await db.from('tickets').insert({
-    number: 900000 + Math.floor(Math.random() * 99999), customer_id: customer.id, assigned_to: assignedTo,
+    shop_id: LA_UNION_ID, number: 900000 + Math.floor(Math.random() * 99999), customer_id: customer.id, assigned_to: assignedTo,
     received_on: new Date().toISOString().slice(0, 10), status: 'recibido',
   }).select('id').single();
   if (e2) throw e2;

@@ -11,7 +11,7 @@ async function cleanup() {
   await db.from('customers').delete().like('name', 'PRUEBA IMPORT%');
 }
 const fixtureTickets = async () => {
-  const { data } = await db.from('ticket_overview').select('*').gte('number', 3000).lte('number', 3999).order('number');
+  const { data } = await db.from('ticket_overview').select('*').gte('number', 3000).lte('number', 3999).order('number').order('suffix');
   return data;
 };
 
@@ -71,7 +71,7 @@ describe('runImport', () => {
   test('commit refuses to run when the sheet has problems', async () => {
     const bad = csvText.replace('3009,26/04/2026 13:00:00,PRUEBA IMPORT OCHO,3009990008,26/04/2026',
       '3009,26/04/2026 13:00:00,PRUEBA IMPORT OCHO,3009990008,31/02/2026');
-    await expect(runImport({ csvText: bad, mode: 'commit', client: db }))
+    await expect(runImport({ csvText: bad, mode: 'commit', shop: 'la-union', client: db }))
       .rejects.toThrow('Hay 1 problema(s) en el archivo');
   });
 });

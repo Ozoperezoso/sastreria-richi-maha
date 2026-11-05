@@ -24,7 +24,9 @@ test('tailors see no admin links and are sent away from admin pages', async ({ p
 
 test('assigned tailor edits dates and garments', async ({ page }) => {
   await login(page, 'alexander');
-  await page.locator('a.tag', { hasText: 'MARÍA MUÑOZ' }).click();
+  // Opened directly: the test above marks this ticket ready, which moves it to the "Por entregar" tab.
+  await page.goto('/#/arreglo/aaaaaaaa-0000-0000-0000-000000000001');
+  await expect(page.getByRole('heading', { name: 'MARÍA MUÑOZ' })).toBeVisible();
   await page.getByRole('button', { name: 'Editar' }).click();
   await page.getByRole('button', { name: '+ Agregar prenda' }).click();
   await page.locator('input[name=garment]').nth(2).fill('Falda');

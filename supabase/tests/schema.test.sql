@@ -10,21 +10,22 @@ select col_not_null('public', 'customers', 'name', 'customer name is required');
 
 -- fixtures
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a1', 'schema_t@sastreria.local');
-insert into public.profiles (id, username, full_name, role) values
-  ('00000000-0000-0000-0000-0000000000a1', 'schema_t', 'Schema Tailor', 'tailor');
-insert into public.customers (id, name, phone) values
-  ('00000000-0000-0000-0000-0000000000c1', 'Cliente Prueba', '3001234567');
+-- Every tailor, customer and ticket belongs to a shop (0007); these go to La Unión.
+insert into public.profiles (id, username, full_name, role, shop_id) values
+  ('00000000-0000-0000-0000-0000000000a1', 'schema_t', 'Schema Tailor', 'tailor', '00000000-0000-0000-0000-00000000a001');
+insert into public.customers (id, name, phone, shop_id) values
+  ('00000000-0000-0000-0000-0000000000c1', 'Cliente Prueba', '3001234567', '00000000-0000-0000-0000-00000000a001');
 
-insert into public.tickets (id, number, customer_id, assigned_to, received_on, due_on, status, deposit)
-values ('00000000-0000-0000-0000-0000000000b1', 90001, '00000000-0000-0000-0000-0000000000c1',
+insert into public.tickets (id, shop_id, number, customer_id, assigned_to, received_on, due_on, status, deposit)
+values ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-00000000a001', 90001, '00000000-0000-0000-0000-0000000000c1',
         '00000000-0000-0000-0000-0000000000a1', current_date, public.today_bogota() - 1, 'en_proceso', 5000);
 insert into public.ticket_items (ticket_id, garment, fix, cost, position) values
   ('00000000-0000-0000-0000-0000000000b1', 'Jean', 'Ruedo', 10000, 0),
   ('00000000-0000-0000-0000-0000000000b1', 'Blusa', 'Costados', 14000, 1);
 
 select throws_ok(
-  $$ insert into public.tickets (number, customer_id, assigned_to, received_on, status)
-     values (90001, '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', current_date, 'recibido') $$,
+  $$ insert into public.tickets (shop_id, number, customer_id, assigned_to, received_on, status)
+     values ('00000000-0000-0000-0000-00000000a001', 90001,'00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', current_date, 'recibido') $$,
   '23505', null, 'duplicate (number, suffix) is rejected');
 
 select is(

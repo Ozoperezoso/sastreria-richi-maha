@@ -34,8 +34,8 @@ select is((select count(*)::int from public.tickets where number = 1), 1, 'claud
 
 -- Ticket numbers come only from create_ticket (plan Review Focus 4), never from a direct insert.
 select throws_ok(
-  $$ insert into public.tickets (number, customer_id, assigned_to, received_on, status)
-     select 999, customer_id, assigned_to, current_date, 'entregado' from public.tickets where number = 1 $$,
+  $$ insert into public.tickets (shop_id, number, customer_id, assigned_to, received_on, status)
+     select shop_id, 999, customer_id, assigned_to, current_date, 'entregado' from public.tickets where number = 1 $$,
   '42501', null, 'claudia cannot insert tickets directly and pick the number or status');
 
 -- ---------- alexander (assigned tailor) ----------

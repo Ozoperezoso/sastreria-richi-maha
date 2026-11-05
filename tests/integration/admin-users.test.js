@@ -62,7 +62,7 @@ describe('admin-users function', () => {
     const res = await call(admin, {
       action: 'create', username: 'Mala Palabra', full_name: 'X', role: 'tailor', password: 'secreta123',
     });
-    expect(res).toEqual({ status: 400, body: { error: 'Usuario inválido' } });
+    expect(res).toEqual({ status: 400, body: { error: 'Usuario inválido: usa minúsculas, números o _ (3 a 20)' } });
   });
 
   test('admin resets a password', async () => {

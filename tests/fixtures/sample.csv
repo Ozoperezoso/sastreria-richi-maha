@@ -1,0 +1,11 @@
+Consecutivo,Marca temporal,Nombre Cliente,Telefono,Fecha,Fecha Estimada de Entrega,Tipo de Prenda,Tipo de Arreglo,Notas,Fecha Real de entrega,Realizado por,Saldo Pendiente,Estado,Valor del Arreglo,Valor Real Arreglo,Abono,Abono Final,mes,Quien Recogio?,Ubicación de la Prenda,Valor Arreglo 2.0
+3000,21/04/2026 15:20:10,PRUEBA IMPORT UNO,3009990001,18/04/2026,21/04/2026,Jean,Tejer rotos.,,21/04/2026,Alexander Rengifo, $0,-, $8.000, $8.000,, $8.000,4,PERSONA UNO,-,
+3001,21/04/2026 15:41:39,PRUEBA IMPORT DOS,3009990002,21/04/2026,25/04/2026,Jean,Cambio cierre,,,Alexander Rengifo, $24.000,-, $24.000, $24.000,,,4,No Registra,-,
+3002,21/04/2026 16:10:05,PRUEBA IMPORT TRES,3009990003,21/04/2026,22/04/2026,Chaqueta,Refuerzo,,46225,Claudia Alvarez,- $6.000,Listo, $10.000, $10.000,, $16.000,7,PERSONA TRES,A,
+3003,22/04/2026 09:00:00,PRUEBA IMPORT CUATRO,3009990004,22/04/2026,24/04/2026,"JEAN, BLUSA","RUEDO, COSTADOS",,,Claudia Alvarez, $20.000,Listo, $20.000,,,,4,No Registra,B,
+3003,22/04/2026 09:05:00,PRUEBA IMPORT CUATRO,3009990004,22/04/2026,24/04/2026,Sudadera,Entubar,,,Claudia Alvarez, $8.000,Listo, $8.000,,,,4,No Registra,B,
+3003,22/04/2026 09:10:00,PRUEBA IMPORT CINCO,3009990005,22/04/2026,24/04/2026,Bolso,Cambio cierre,,,Alexander Rengifo, $12.000,-, $12.000,,,,4,No Registra,-,
+3004,23/04/2026 10:00:00,PRUEBA IMPORT SEIS,,23/04/2026,23/04/2026,Pantalon,Ruedo,GRANTIA,23/04/2026,Alexander Rengifo, $0,-,,,,,4,No Registra,-,
+3006,24/04/2026 11:00:00,PRUEBA IMPORT UNO,3009990001,24/04/2026,30/04/2026,Camisa,Pinzas,,,Alexander Rengifo, $9.000,-, $14.000,, $5.000,,4,No Registra,-,
+3007,25/04/2026 12:00:00,PRUEBA IMPORT SIETE,3009990007,25/04/2026,28/04/2026,Falda,Ruedo,,,Claudia Alvarez, $10.000,Listo, $10.000,,,,4,No Registra,CAJON,
+3009,26/04/2026 13:00:00,PRUEBA IMPORT OCHO,3009990008,26/04/2026,29/04/2026,Vestido,Ajuste,,,Alexander Rengifo, $15.000,-, $15.000,,,,4,No Registra,-,

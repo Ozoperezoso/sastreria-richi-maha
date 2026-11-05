@@ -1,5 +1,7 @@
 # Customer data: never commit (public repo)
 *.csv
+# ...except the made-up rows the importer tests use
+!tests/fixtures/*.csv
 exports/
 
 # Secrets

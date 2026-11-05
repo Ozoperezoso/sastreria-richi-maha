@@ -5,6 +5,7 @@ exports/
 # Secrets
 .env
 .env.*
+!.env.example
 
 # Build / deps
 node_modules/
@@ -13,3 +14,11 @@ dist/
 # OS
 desktop.ini
 Thumbs.db
+
+# Playwright
+test-results/
+playwright-report/
+.playwright-mcp/
+
+# Local build notes and test output
+.superpowers/

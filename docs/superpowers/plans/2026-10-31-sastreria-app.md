@@ -1,4 +1,4 @@
-# Sastrería Richi-Maha Implementation Plan
+# El Sastre Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -16,7 +16,7 @@
 - Dates display as `d/mm/yyyy`, matching the sheet. Stored as SQL `date`. "Today" is America/Bogota time.
 - Statuses (DB values → labels): `recibido` → Recibido, `en_proceso` → En proceso, `listo` → Listo para entregar, `entregado` → Entregado, `cancelado` → Cancelado.
 - Locations: `A`, `B`, `C`, `D`, `E`, `CAJON` (label Cajón), `BODEGA` (label Bodega).
-- Usernames: `alexander` (Alexander Rengifo, tailor), `claudia` (Claudia Alvarez, tailor), `rodrigo` (Rodrigo, admin). Auth email = `<username>@sastreria.local`.
+- Usernames: `alexander` (Alexander Rengifo, tailor), `claudia` (Claudia Alvarez, tailor), `admin` (Administrador, admin). Auth email = `<username>@sastreria.local`.
 - New ticket numbers start at max imported number + 1 (expected 2712).
 - No runtime CDN requests: every script, style and font is bundled. Use the system font stack.
 - The service-role key never appears in front-end code, git, or logs. `*.csv`, `.env*` and `exports/` stay git-ignored.
@@ -36,7 +36,7 @@
 ## File Structure
 
 ```
-sastreria-richi-maha/
+el-sastre/
 ├── package.json, vite.config.js, svelte.config.js, playwright.config.js, index.html, .env.example
 ├── supabase/
 │   ├── config.toml
@@ -123,7 +123,7 @@ sastreria-richi-maha/
 - Produces:
   - `is_active_user() returns bool`, `is_admin() returns bool` (security definer, reading `profiles` for `auth.uid()`).
   - triggers `tickets_audit` (sets `updated_by`/`updated_at`; sets `created_by` on insert), `tickets_status_rules`, `tickets_column_guard`, and `ticket_items_guard`.
-  - seed users (local only): `alexander`, `claudia`, `rodrigo` (password `test1234`) and `inactivo` (an inactive tailor), plus 2 tickets, one assigned to each tailor.
+  - seed users (local only): `alexander`, `claudia`, `admin` (password `test1234`) and `inactivo` (an inactive tailor), plus 2 tickets, one assigned to each tailor.
 - Rules:
   - SELECT on all tables requires `is_active_user()`.
   - INSERT on tickets, items and customers requires an active user.
@@ -135,7 +135,7 @@ sastreria-richi-maha/
 
 - [ ] **Step 1: Write failing pgTAP tests** (use `set local role authenticated` + `set local request.jwt.claims` to impersonate each seed user):
   - claudia sees alexander's ticket.
-  - claudia `delete` of a ticket affects 0 rows; rodrigo's delete affects 1.
+  - claudia `delete` of a ticket affects 0 rows; the admin's delete affects 1.
   - claudia updating `status`/`paid_in_full` on alexander's ticket succeeds; updating `due_on` on it throws the guard message.
   - claudia inserting a `ticket_items` row on alexander's ticket is rejected.
   - alexander's full edit of his own ticket succeeds.
@@ -192,7 +192,7 @@ sastreria-richi-maha/
 
 - [ ] **Step 1: Write failing integration tests** (local stack; sign in seed users with supabase-js):
   - alexander's call returns 403.
-  - rodrigo creates `prueba` → can sign in with that password.
+  - the admin creates `prueba` → can sign in with that password.
   - Duplicate username → 400.
   - Short password → 400 with that message.
   - `set_active false` → `prueba`'s next `select` on tickets returns 0 rows.
@@ -285,7 +285,7 @@ sastreria-richi-maha/
     - `displayNumber({number, suffix}) -> '136-B'|'2712'`
     - `statusLabel(status)`, `locationLabel(loc)`
   - `permissions.js`: `isAdmin(profile)`, `canEditCore(profile, ticket)` (admin or `ticket.assigned_to === profile.id`), `canDelete(profile)`.
-- Layout: top bar with the shop name "Sastrería Richi-Maha", the user's name and "Salir"; admin links visible only to the admin; at most 640px wide, centred; tap targets at least 44px.
+- Layout: top bar with the shop name "El Sastre", the user's name and "Salir"; admin links visible only to the admin; at most 640px wide, centred; tap targets at least 44px.
 
 - [ ] **Step 1: Write failing unit tests** for every `format.js` and `permissions.js` example above, including `parseCOPInput('10,5')` and `parseCOPInput('abc')` throwing `'Valor inválido'`.
 - [ ] **Step 2:** `npm test`. Expected: FAIL.
@@ -420,7 +420,7 @@ sastreria-richi-maha/
     - No admin links are visible.
     - Navigating to `#/admin` redirects to `#/`.
   - **admin:**
-    - rodrigo sees the panel totals.
+    - the admin sees the panel totals.
     - Creates user `prueba`, then deactivates it; a second browser context logged in as `prueba` gets "Usuario inactivo" after a reload.
     - Exports CSV: the download filename matches `arreglos-\d{4}-\d{2}-\d{2}\.csv`.
     - Deletes a ticket.
@@ -434,20 +434,20 @@ This task is mostly account setup. For each step, the executor does it via tools
 **Files:**
 - Create: `docs/OPERACION.md` (Spanish admin guide: login, creating users, weekly export, restoring a paused project)
 
-- [ ] **Step 1: Supabase project.** Create the project "sastreria-richi-maha" in org Ozoperezoso, region `us-east-1`, free plan (Supabase MCP `create_project`, or dashboard → New project). Then:
+- [ ] **Step 1: Supabase project.** Create the project "el-sastre" in org Ozoperezoso, region `us-east-1`, free plan (Supabase MCP `create_project`, or dashboard → New project). Then:
   - `npx supabase link --project-ref <ref>`
   - `npx supabase db push`
   - `npx supabase functions deploy admin-users`
 
   Under Auth settings: disable sign-ups and email confirmations.
-- [ ] **Step 2: Real users.** Create `scripts/bootstrap-admin.js`: run locally with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from `.env.production.local`; it prompts for the password in the terminal (the user types it, never in chat); it creates auth user `rodrigo@sastreria.local` and the profile `{username:'rodrigo', full_name:'Rodrigo', role:'admin', active:true}`; it exits if `rodrigo` already exists. Rodrigo then creates `alexander` and `claudia` in the app.
+- [ ] **Step 2: Real users.** Create `scripts/bootstrap-admin.js`: run locally with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from `.env.production.local`; it prompts for the password in the terminal (the user types it, never in chat); it creates auth user `admin@sastreria.local` and the profile `{username:'admin', full_name:'Administrador', role:'admin', active:true}`; it exits if `admin` already exists. The administrator then creates `alexander` and `claudia` in the app.
 - [ ] **Step 3: Import.** Run `node scripts/import/run.js "<BD_Registros.csv>" --dry-run` against production (`.env.production.local`). Show the user the summary and problems, and **wait for their OK**, then run `--commit`. Spot-check 5 tickets in the app against the sheet with the user.
-- [ ] **Step 4: Cloudflare Pages.** Create a Pages project connected to GitHub `Ozoperezoso/sastreria-richi-maha` (dashboard: Workers & Pages → Create → Pages → Connect to Git). Settings:
+- [ ] **Step 4: Cloudflare Pages.** Create a Pages project connected to GitHub `Ozoperezoso/el-sastre` (dashboard: Workers & Pages → Create → Pages → Connect to Git). Settings:
   - Build command `npm run build`, output `dist`.
   - Env `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
   - Node version 22 or higher.
 
-  Confirm `https://sastreria-richi-maha.pages.dev` loads and login works on a phone.
+  Confirm `https://el-sastre.pages.dev` loads and login works on a phone.
 - [ ] **Step 5:** Run Playwright `tailor-flow` against the production URL with a temporary test user, then delete that user and its tickets.
 - [ ] **Step 6:** Write `docs/OPERACION.md`; commit `docs: operation guide`; push. Confirm Cloudflare redeploys.
 - [ ] **Step 7: Switch day (scheduled with the user, after the 2–3 day trial):** fresh export, then `--commit --since <last imported number>`, and the form is retired.

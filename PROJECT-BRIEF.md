@@ -1,4 +1,4 @@
-# Sastrería Richi-Maha — Project brief
+# El Sastre — Project brief
 
 Status: **on hold** (decisions captured 2026-10-31). Nothing built yet.
 
@@ -57,7 +57,7 @@ Open questions before importing are listed in the conversation and below.
 - Estimated return date: blank by default; the tailor picks it.
 
 - Front end: Svelte + Vite (approach A), bundled with no runtime CDN dependencies.
-- People: tailors Alexander Rengifo and Claudia Alvarez; admin Rodrigo.
+- People: tailors Alexander Rengifo and Claudia Alvarez; one administrator (shown as "Administrador", no personal name).
 - Storage location (A, B, C, D, E, Cajón, Bodega): required when marking "Listo para entregar".
 - "Quién recogió": optional text when marking "Entregado".
 - Price changes: the tailor can update the cost at pickup. On import, price = max(recorded price, deposit + final payment).

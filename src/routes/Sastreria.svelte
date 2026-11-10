@@ -6,6 +6,7 @@
   import { getShop, getShopContact, platformShopStats, platformShopUsers, adminUsers } from '../lib/api.js';
   import { formatDate, formatCount, relativeDays } from '../lib/format.js';
   import { notify } from '../lib/toast.svelte.js';
+  import { navigate } from '../lib/router.svelte.js';
 
   let { params } = $props();
 
@@ -84,6 +85,26 @@
       `${shop.name} ${shop.active ? 'desactivada' : 'activada'}.`);
   }
 
+  // Deleting is permanent: the server also checks that the shop is deactivated and the name matches.
+  const canDelete = $derived(String(form.typed ?? '').trim() === shop?.name);
+  async function deleteShop(event) {
+    event.preventDefault();
+    if (!canDelete) return;
+    const name = shop.name;
+    busy = true;
+    formError = '';
+    try {
+      await adminUsers('delete_shop', { shop_id: shop.id, confirm_name: name });
+      dialogOpen = false;
+      navigate('/');
+      notify(`${name} eliminada.`);
+    } catch (e) {
+      formError = e.message;
+    } finally {
+      busy = false;
+    }
+  }
+
   function saveNewUser(event) {
     event.preventDefault();
     const username = form.username.trim().toLowerCase();
@@ -108,6 +129,7 @@
   const title = $derived({
     edit: 'Editar sastrería',
     shop: shop?.active ? `¿Desactivar ${shop?.name}?` : `¿Activar ${shop?.name}?`,
+    delete: `¿Eliminar ${shop?.name}?`,
     new: 'Nuevo usuario',
     rename: `Cambiar nombre de ${target?.username ?? ''}`,
     reset: `Nueva contraseña para ${target?.username ?? ''}`,
@@ -197,6 +219,15 @@
         </ul>
       {/if}
     </section>
+
+    <section class="panel danger-zone" aria-labelledby="h-peligro">
+      <h2 id="h-peligro">Eliminar sastrería</h2>
+      <p class="muted">Borra la sastrería con todos sus arreglos, clientes y usuarios. No se puede deshacer.</p>
+      <div class="danger-row">
+        <button class="btn btn-danger" disabled={shop.active} onclick={() => open('delete', null, { typed: '' })}>Eliminar sastrería</button>
+        {#if shop.active}<span class="muted"><b>Desactívala primero</b></span>{/if}
+      </div>
+    </section>
   {/if}
 </main>
 
@@ -235,6 +266,17 @@
       <button class="btn" class:btn-danger={shop?.active} class:btn-indigo={!shop?.active} disabled={busy} onclick={toggleShop}>
         {shop?.active ? 'Desactivar' : 'Activar'}</button>
     </div>
+  {:else if dialog === 'delete'}
+    <form class="stack" onsubmit={deleteShop}>
+      <p>Se borrarán para siempre <b>{formatCount(stats?.tickets_total ?? 0)} arreglos, {formatCount(stats?.customers_total ?? 0)} clientes y {formatCount(stats?.users_total ?? 0)} usuarios</b>. Escribe el nombre exacto de la sastrería para confirmar.</p>
+      <label class="field"><span>Nombre de la sastrería</span>
+        <input class="input" bind:value={form.typed} autocomplete="off" autocapitalize="none" placeholder={shop?.name} /></label>
+      {#if formError}<p class="error" role="alert">{formError}</p>{/if}
+      <div class="actions">
+        <button type="button" class="btn" onclick={() => (dialogOpen = false)}>Cancelar</button>
+        <button class="btn btn-danger" type="submit" disabled={busy || !canDelete}>Eliminar {shop?.name}</button>
+      </div>
+    </form>
   {:else if dialog === 'new'}
     <form class="stack" onsubmit={saveNewUser}>
       <label class="field"><span>Usuario</span>
@@ -325,6 +367,9 @@
   .skeleton { display: grid; gap: 1rem; }
   .sk-title { display: block; height: 72px; border-radius: var(--radius-control); }
   .sk-block { display: block; height: 220px; border-radius: var(--radius-tag); }
+  .danger-zone { border-color: #efb7b1; }
+  .danger-zone h2 { color: var(--overdue); }
+  .danger-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
   .stack { display: grid; gap: 0.85rem; }
   .small { font-size: 0.85rem; }
   .note { margin-top: 0.75rem; }

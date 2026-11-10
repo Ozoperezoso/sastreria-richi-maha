@@ -12,6 +12,7 @@ Especificación: `docs/superpowers/specs/2026-10-31-sastreria-app-design.md`. Pl
 | Diseño nuevo "El Sastre" (paño verde y cinta métrica) | **Hecho** |
 | Varias sastrerías en una sola app (`0007_multi_shop.sql`) | **Hecho**: La Unión es la primera |
 | Tarea 15: producción | **Publicado** (detalles abajo) |
+| Pantallas de plataforma (página por sastrería, usuarios, eliminar) | **Hecho en local**; **pendiente de aplicar en producción** (ver abajo) |
 
 En la última ejecución pasaron todas las pruebas: base de datos (pgTAP) 56, unitarias 62, integración 15, de extremo a extremo 13. GitHub Actions las corre en cada PR y en cada push a `main` (`.github/workflows/tests.yml`).
 
@@ -19,9 +20,10 @@ En la última ejecución pasaron todas las pruebas: base de datos (pgTAP) 56, un
 
 - App: **https://el-sastre.mahalaksmya.workers.dev** (Cloudflare Workers).
 - Base de datos: proyecto de Supabase `el-sastre`, con las migraciones 0001–0007 y la función `admin-users`.
+- **Pendiente de aplicar en producción:** la migración `0008` (estadísticas y usuarios para la plataforma, contacto de cada sastrería) y los cambios de `admin-users` (editar sastrería, gestionar usuarios, eliminar sastrería), además de la app nueva. Hay que aplicarlas con la cuenta de Mahalaksmy (proyecto `el-sastre`); esto no se ha hecho.
 - Datos de La Unión importados: 2.693 arreglos y 2.143 clientes. El próximo número es el 2717.
 - **Las dos cuentas (Supabase y Cloudflare) son personales de Mahalaksmy.** La configuración de la publicación en Cloudflare no está en el repositorio.
-- Desde que existe producción, **las migraciones 0001–0007 no se vuelven a editar**: todo cambio va en una migración nueva (`0008_…`).
+- Desde que existe producción, **las migraciones 0001–0007 no se vuelven a editar**: todo cambio va en una migración nueva (`0009_…` en adelante; la `0008` ya existe en el repositorio, aunque aún no está en producción).
 
 ## Cómo ejecutarlo en local
 
@@ -75,6 +77,11 @@ Léelas antes de modificar el código relacionado:
 - **`create_ticket` es `SECURITY DEFINER`** (el plan decía invoker). El sastre que recibe la prenda tiene que poder agregar prendas a un arreglo asignado al otro sastre. La función toma la sastrería del usuario que llama, nunca de la solicitud, y comprueba que el cliente sea de esa sastrería. Un trigger (`tickets_assignee_check`) asegura que los arreglos solo se asignen a sastres activos de la misma sastrería.
 - **Los arreglos solo se crean con `create_ticket`.** No hay regla de inserción directa en `tickets`; el importador y las pruebas usan la clave de servicio.
 - **Solo el administrador cambia el número, el sufijo o la fila importada** de un arreglo.
+- **Plataforma:**
+  - Las cifras de dinero no se muestran a la plataforma.
+  - Las notas de contacto viven en `shop_contacts`, no en `shops`, porque los usuarios de una sastrería pueden leer su propia fila de `shops`.
+  - Los meses se cuentan por la fecha de recibido (`received_on`).
+  - Eliminar es definitivo, sin papelera. La protección son los dos pasos (desactivar y escribir el nombre). Una sastrería desactivada no puede entrar, así que quien quiera sus datos debe exportar el CSV **antes** de desactivarla; el diálogo de Desactivar lo avisa.
 - **Varias sastrerías:** cada usuario, cliente y arreglo tiene `shop_id`, y RLS solo muestra la sastrería propia. Cada sastrería numera sus arreglos (`shops.next_ticket_number`). Nada pasa de una sastrería a otra. Una sastrería desactivada deja a sus usuarios sin acceso. El rol `platform` maneja sastrerías y no ve arreglos ni clientes.
 - **Desactivar un usuario** lo bloquea en Auth y además le oculta todos los datos mediante RLS. La app revisa la sesión en cada cambio de pantalla y muestra "Usuario inactivo".
 - **Entrada sin correo:** el usuario `claudia` es por dentro `claudia@sastreria.local`; nadie lo ve.

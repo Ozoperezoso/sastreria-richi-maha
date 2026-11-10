@@ -39,9 +39,16 @@ El plan gratuito de Supabase **pausa el proyecto después de 7 días sin uso**, 
 2. Abre el proyecto y toca **Restore project**.
 3. Espera unos minutos y vuelve a cargar la app. No se pierde ningún dato.
 
-## Sastrerías nuevas (técnico)
+## Sastrerías (técnico)
 
-El usuario de plataforma (`plataforma`) entra a la pantalla **Plataforma**, toca **Nueva sastrería** y escribe el nombre, un código (por ejemplo `el-boton`) y su primer administrador. Desde ahí también se desactiva una sastrería: sus usuarios pierden el acceso y los datos quedan guardados.
+El usuario de plataforma (`plataforma`) entra a la pantalla **Plataforma**. Ahí ve la lista de sastrerías con su uso (arreglos del mes, sastres activos, última actividad). No ve arreglos ni clientes, solo cifras.
+
+- **Crear:** **Nueva sastrería**, con el nombre, un código (por ejemplo `el-boton`) y su primer administrador.
+- **Página de la sastrería:** toca una fila. Muestra el uso de los últimos 6 meses, el contacto y los usuarios.
+- **Editar:** nombre, ciudad, persona de contacto, teléfono, correo y notas. El código no cambia.
+- **Usuarios:** **Nuevo usuario**, **Cambiar nombre**, **Cambiar contraseña** y **Desactivar / Activar**. La contraseña se comparte en persona.
+- **Desactivar:** sus usuarios pierden el acceso de inmediato y los datos quedan guardados. **Antes, pide al administrador de la sastrería que exporte el CSV** (Todos los arreglos): después ya no podrán entrar.
+- **Eliminar:** solo con la sastrería desactivada, y es para siempre. Se hace en dos pasos: desactivar, y luego **Eliminar sastrería** escribiendo el nombre exacto. Se borran sus arreglos, clientes y usuarios.
 
 Si hay que crear el usuario de plataforma o un administrador desde cero:
 

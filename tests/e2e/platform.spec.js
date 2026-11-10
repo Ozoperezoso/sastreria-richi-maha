@@ -69,6 +69,14 @@ test('a shop admin is sent away from a shop page', async ({ page }) => {
   await expect(page).toHaveURL(/#\/$/);
 });
 
+test('delete is disabled while the shop is active', async ({ page }) => {
+  await login(page, 'plataforma');
+  await page.goto(`/#/plataforma/${LA_UNION_ID}`);
+  await expect(page.getByRole('heading', { level: 1, name: 'Sastrería La Unión' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Eliminar sastrería' })).toBeDisabled();
+  await expect(page.getByText('Desactívala primero')).toBeVisible();
+});
+
 test('a shop with no usage shows Sin uso and empty bars', async ({ page }) => {
   await login(page, 'plataforma');
   await page.getByLabel('Nombre', { exact: true }).fill('Sastrería Vacía');
@@ -84,4 +92,32 @@ test('a shop with no usage shows Sin uso and empty bars', async ({ page }) => {
   const bars = page.getByRole('list', { name: 'Arreglos por mes' });
   await expect(bars.getByRole('listitem')).toHaveCount(6);
   await expect(bars.locator('.count')).toHaveText(['0', '0', '0', '0', '0', '0']);
+});
+
+test('the platform deactivates and deletes a shop by typing its name', async ({ page }) => {
+  await login(page, 'plataforma');
+  await page.getByLabel('Nombre', { exact: true }).fill('Sastrería Para Borrar');
+  await page.getByLabel('Nombre completo').fill('Admin Borrar');
+  await page.getByLabel(/^Usuario/).fill('admin_borrar');
+  await page.getByLabel('Contraseña inicial').fill('secreta123');
+  await page.getByRole('button', { name: 'Crear sastrería' }).click();
+  await shopRow(page, 'Sastrería Para Borrar').click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Sastrería Para Borrar' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Desactivar', exact: true }).first().click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Desactivar', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+
+  await page.getByRole('button', { name: 'Eliminar sastrería' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Se borrarán para siempre 0 arreglos, 0 clientes y 1 usuarios.');
+  const confirm = dialog.getByRole('button', { name: 'Eliminar Sastrería Para Borrar' });
+  await dialog.getByLabel('Nombre de la sastrería').fill('sastrería para borrar');
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel('Nombre de la sastrería').fill('Sastrería Para Borrar');
+  await confirm.click();
+
+  await expect(page).toHaveURL(/#\/$/);
+  await expect(page.getByText('Sastrería Para Borrar eliminada.')).toBeVisible();
+  await expect(shopRow(page, 'Sastrería Para Borrar')).toHaveCount(0);
 });

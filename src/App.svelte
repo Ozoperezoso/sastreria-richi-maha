@@ -5,6 +5,7 @@
   import { isAdmin, isPlatform } from './lib/permissions.js';
   import { APP_NAME, shopLabel } from './lib/shop.js';
   import Plataforma from './routes/Plataforma.svelte';
+  import Sastreria from './routes/Sastreria.svelte';
   import Toast from './components/Toast.svelte';
   import Login from './routes/Login.svelte';
   import Inicio from './routes/Inicio.svelte';
@@ -32,6 +33,11 @@
     if (session.profile && router.admin && !isAdmin(session.profile)) navigate('/');
   });
 
+  // Shop pages are only for the platform.
+  $effect(() => {
+    if (session.profile && router.platform && !isPlatform(session.profile)) navigate('/');
+  });
+
   const Screen = $derived(SCREENS[router.name] ?? Inicio);
   const admin = $derived(isAdmin(session.profile));
   // The toast sits above the admin's bottom bar on phones.
@@ -51,7 +57,11 @@
     </div>
   </header>
   {#if isPlatform(session.profile)}
-    <Plataforma />
+    {#if router.name === 'plataforma'}
+      {#key router.path}<Sastreria params={router.params} />{/key}
+    {:else}
+      <Plataforma />
+    {/if}
   {:else}
   {#if admin}
     <nav class="adminnav" aria-label="Administración">
@@ -65,7 +75,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>Usuarios</a>
     </nav>
   {/if}
-  {#if !router.admin || admin}
+  {#if (!router.admin || admin) && !router.platform}
     {#key router.path}<Screen params={router.params} />{/key}
   {/if}
   {/if}

@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import {
-  formatCOP, parseCOPInput, formatDate, displayNumber, statusLabel, locationLabel, todayISO,
+  formatCOP, parseCOPInput, formatDate, displayNumber, statusLabel, locationLabel, todayISO, relativeDays,
 } from '../../src/lib/format.js';
 
 describe('formatCOP', () => {
@@ -62,5 +62,24 @@ describe('period starts', () => {
   });
   test('months start on the 1st', () => {
     expect(startOfMonth('2026-10-31')).toBe('2026-10-01');
+  });
+});
+
+describe('relativeDays', () => {
+  const now = new Date('2026-11-10T20:00:00Z');
+  test('null means never used', () => {
+    expect(relativeDays(null)).toBe('Sin uso');
+  });
+  test('today, yesterday and days', () => {
+    expect(relativeDays('2026-11-10T15:00:00Z', now)).toBe('hoy');
+    expect(relativeDays('2026-11-09T15:00:00Z', now)).toBe('ayer');
+    expect(relativeDays('2026-11-07T15:00:00Z', now)).toBe('hace 3 días');
+  });
+  test('30 days or more counts in months', () => {
+    expect(relativeDays('2026-08-01T15:00:00Z', now)).toBe('hace 3 meses');
+    expect(relativeDays('2026-10-11T15:00:00Z', now)).toBe('hace 1 mes');
+  });
+  test('compares Bogotá calendar days', () => {
+    expect(relativeDays('2026-11-10T15:00:00Z', new Date('2026-11-11T03:00:00Z'))).toBe('hoy');
   });
 });

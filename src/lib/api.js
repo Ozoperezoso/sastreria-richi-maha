@@ -156,9 +156,31 @@ export async function listShops() {
     .order('created_at'));
 }
 
+/** Platform: usage numbers per shop (users, tickets, last activity), one row per shop. */
+export async function platformShopStats() {
+  return unwrap(await supabase.rpc('platform_shop_stats'));
+}
+
+/** Platform: the users of one shop, with their last sign-in. */
+export async function platformShopUsers(shopId) {
+  return unwrap(await supabase.rpc('platform_shop_users', { p_shop: shopId }));
+}
+
+/** Platform: one shop. */
+export async function getShop(shopId) {
+  return unwrap(await supabase.from('shops').select('id, slug, name, city, active, created_at')
+    .eq('id', shopId).single());
+}
+
+/** Platform: who to call at a shop; null when none has been saved. */
+export async function getShopContact(shopId) {
+  return unwrap(await supabase.from('shop_contacts').select('contact_name, contact_phone, contact_email, notes')
+    .eq('shop_id', shopId).maybeSingle());
+}
+
 /**
  * Admin user management through the admin-users Edge Function.
- * @param {'create'|'reset_password'|'set_active'|'create_shop'|'set_shop_active'} action
+ * @param {'create'|'reset_password'|'set_active'|'create_shop'|'set_shop_active'|'update_shop'|'rename_user'|'delete_shop'} action
  */
 export async function adminUsers(action, payload) {
   const { data, error } = await supabase.functions.invoke('admin-users', { body: { action, ...payload } });

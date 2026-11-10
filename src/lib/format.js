@@ -119,3 +119,14 @@ export function dueText(dueIso, today = todayISO()) {
   if (days === 1) return 'Se entrega mañana';
   return `Se entrega en ${days} días, ${longDate(dueIso)}`;
 }
+
+/** How long ago, in Bogotá calendar days: 'hoy', 'ayer', 'hace 3 días', 'hace 2 meses'; null → 'Sin uso'. */
+export function relativeDays(value, today = new Date()) {
+  if (!value) return 'Sin uso';
+  const days = daysBetween(todayISO(new Date(value)), todayISO(today));
+  if (days <= 0) return 'hoy';
+  if (days === 1) return 'ayer';
+  if (days < 30) return `hace ${days} días`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? 'hace 1 mes' : `hace ${months} meses`;
+}

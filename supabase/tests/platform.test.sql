@@ -55,8 +55,15 @@ set local role authenticated;
 select is((select tickets_this_month from public.platform_shop_stats() where shop_id = '00000000-0000-0000-0000-00000000a001'),
   (select n + 1 from baseline), 'a ticket on the last day of the previous month does not');
 
+-- Expected previous-month count computed as postgres: seed ticket 1 (today - 3) may fall in either month.
+reset role;
+create temp table expected_prev as
+  select count(*)::int as n from public.tickets where shop_id = '00000000-0000-0000-0000-00000000a001'
+    and date_trunc('month', received_on) = date_trunc('month', public.today_bogota()) - interval '1 month';
+grant select on expected_prev to authenticated;
+set local role authenticated;
 select is((select (months -> 4 ->> 'tickets')::int from public.platform_shop_stats() where shop_id = '00000000-0000-0000-0000-00000000a001'),
-  1, 'the previous-month ticket shows in the previous bar');
+  (select n from expected_prev), 'the previous-month ticket shows in the previous bar');
 
 -- Counts below ignore the two tickets added above (ticket total is 4 now).
 select is((select array[users_total, users_active, tailors_active, tickets_total, customers_total]

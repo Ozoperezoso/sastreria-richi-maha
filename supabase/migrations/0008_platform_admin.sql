@@ -68,3 +68,27 @@ revoke execute on function public.platform_shop_stats() from public, anon;
 revoke execute on function public.platform_shop_users(uuid) from public, anon;
 grant execute on function public.platform_shop_stats() to authenticated;
 grant execute on function public.platform_shop_users(uuid) to authenticated;
+
+-- ---------- Delete a deactivated shop's data (service role only) ----------
+-- Tickets (items go by cascade), then customers. Returns the shop's profile ids so the caller can
+-- remove their logins. Safe to repeat. The shops row is deleted by the caller afterwards.
+create function public.delete_shop_data(p_shop uuid) returns setof uuid
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_active boolean;
+begin
+  select s.active into v_active from public.shops s where s.id = p_shop;
+  if not found then
+    raise exception 'Sastrería no encontrada';
+  end if;
+  if v_active then
+    raise exception 'Primero desactiva la sastrería';
+  end if;
+  delete from public.tickets where shop_id = p_shop;
+  delete from public.customers where shop_id = p_shop;
+  return query select p.id from public.profiles p where p.shop_id = p_shop;
+end
+$$;
+
+revoke execute on function public.delete_shop_data(uuid) from public, anon, authenticated;
+grant execute on function public.delete_shop_data(uuid) to service_role;

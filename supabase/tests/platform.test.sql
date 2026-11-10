@@ -1,7 +1,7 @@
 -- Platform-only reads (spec 3.1-3.3). Relies on supabase/seed.sql:
 -- La Unión (…a001) has 4 users (3 active, 2 active tailors), 2 tickets, 2 customers; plataforma is 6666….
 begin;
-select plan(18);
+select plan(25);
 
 -- A contact row and an empty shop, created as the table owner.
 insert into public.shop_contacts (shop_id, contact_name) values ('00000000-0000-0000-0000-00000000a001', 'Dueña');
@@ -101,6 +101,29 @@ select is((select (pg_get_function_result('public.platform_shop_stats()'::regpro
                    pg_get_function_result('public.platform_shop_users(uuid)'::regprocedure))
                   ~ '(customer_name|customer_phone|phone|garment|fix|notes|items|balance|deposit|cost)'),
   false, 'the functions expose no customer, ticket text or money columns');
+
+-- ---------- delete_shop_data (spec 3.4) ----------
+-- Still the platform user at this point; it has no execute grant.
+set local role authenticated;
+select throws_ok($$ select public.delete_shop_data('00000000-0000-0000-0000-00000000b002') $$,
+  '42501', null, 'authenticated cannot run delete_shop_data');
+
+-- Service role equivalent: the table owner.
+reset role;
+create temp table la_union_before as
+  select count(*)::int as n from public.tickets where shop_id = '00000000-0000-0000-0000-00000000a001';
+select throws_ok($$ select public.delete_shop_data('00000000-0000-0000-0000-00000000b002') $$,
+  'P0001', 'Primero desactiva la sastrería', 'refuses an active shop');
+
+update public.shops set active = false where id = '00000000-0000-0000-0000-00000000b002';
+select is((select count(*)::int from public.delete_shop_data('00000000-0000-0000-0000-00000000b002')), 1,
+  'the first run returns the shop profile');
+select is((select count(*)::int from public.tickets where shop_id = '00000000-0000-0000-0000-00000000b002'), 0, 'its tickets are gone');
+select is((select count(*)::int from public.customers where shop_id = '00000000-0000-0000-0000-00000000b002'), 0, 'its customers are gone');
+select is((select count(*)::int from public.tickets where shop_id = '00000000-0000-0000-0000-00000000a001'),
+  (select n from la_union_before), 'La Unión keeps its tickets');
+select is((select count(*)::int from public.delete_shop_data('00000000-0000-0000-0000-00000000b002')), 1,
+  'running again is safe and returns the remaining profile');
 
 select * from finish();
 rollback;

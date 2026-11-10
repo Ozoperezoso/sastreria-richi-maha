@@ -5,6 +5,7 @@
 //               | {action:'reset_password', user_id, password} | {action:'set_active', user_id, active}
 //   platform:   {action:'create_shop', name, slug, city?, admin_username, admin_full_name, admin_password}
 //               | {action:'set_shop_active', shop_id, active} | {action:'reset_password', user_id, password}
+//               | {action:'delete_shop', shop_id, confirm_name}   (shop must be deactivated first)
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -149,6 +150,29 @@ Deno.serve(async (req) => {
     const { data: updated, error } = await admin.from('shops')
       .update({ active: body.active === true }).eq('id', String(body.shop_id)).select('id');
     if (error || !updated?.length) return json(400, { error: 'Sastrería no encontrada' });
+    return json(200, { ok: true });
+  }
+
+  if (body.action === 'delete_shop') {
+    if (!isPlatform) return json(403, { error: 'Solo la plataforma' });
+    const shopId = String(body.shop_id);
+    const { data: shop } = await admin.from('shops').select('name, active').eq('id', shopId).maybeSingle();
+    if (!shop) return json(400, { error: 'Sastrería no encontrada' });
+    if (shop.active) return json(400, { error: 'Primero desactiva la sastrería' });
+    if (String(body.confirm_name ?? '').trim() !== shop.name) return json(400, { error: 'El nombre no coincide' });
+
+    // Every step is safe to repeat, so a failed run is finished by running it again.
+    const { data: profileIds, error: dataError } = await admin.rpc('delete_shop_data', { p_shop: shopId });
+    if (dataError) {
+      const known = ['Sastrería no encontrada', 'Primero desactiva la sastrería'].includes(dataError.message);
+      return known ? json(400, { error: dataError.message }) : json(500, { error: 'No se pudo borrar todo; intenta otra vez' });
+    }
+    for (const id of (profileIds ?? []) as string[]) {
+      const { error } = await admin.auth.admin.deleteUser(id);
+      if (error) return json(500, { error: 'No se pudo borrar todo; intenta otra vez' });
+    }
+    const { error: shopError } = await admin.from('shops').delete().eq('id', shopId);
+    if (shopError) return json(500, { error: 'No se pudo borrar todo; intenta otra vez' });
     return json(200, { ok: true });
   }
 

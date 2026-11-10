@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import {
-  formatCOP, parseCOPInput, formatDate, displayNumber, statusLabel, locationLabel, todayISO, relativeDays,
+  formatCOP, parseCOPInput, formatDate, displayNumber, statusLabel, locationLabel, todayISO, relativeDays, formatCount,
 } from '../../src/lib/format.js';
 
 describe('formatCOP', () => {
@@ -81,5 +81,14 @@ describe('relativeDays', () => {
   });
   test('compares Bogotá calendar days', () => {
     expect(relativeDays('2026-11-10T15:00:00Z', new Date('2026-11-11T03:00:00Z'))).toBe('hoy');
+  });
+});
+
+describe('formatCount', () => {
+  test('uses dot thousands separators', () => {
+    expect(formatCount(2690)).toBe('2.690');
+    expect(formatCount(0)).toBe('0');
+    expect(formatCount(null)).toBe('0');
+    expect(formatCount(1234567)).toBe('1.234.567');
   });
 });

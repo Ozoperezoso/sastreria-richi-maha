@@ -19,6 +19,9 @@ export function formatCOP(amount) {
   return `${value < 0 ? '-' : ''}$${digits}`;
 }
 
+/** A count with dot thousands separators: 2690 → '2.690'. */
+export const formatCount = (count) => formatCOP(count).replace('$', '');
+
 /** '10.000' | '$10.000' | '10000' → 10000; '' → 0; anything else throws 'Valor inválido'. */
 export function parseCOPInput(text) {
   const cleaned = String(text ?? '').replace(/[\s$]/g, '');

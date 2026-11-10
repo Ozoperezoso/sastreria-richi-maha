@@ -6,7 +6,8 @@
 //               | {action:'reset_password', user_id, password} | {action:'set_active', user_id, active}
 //               | {action:'rename_user', user_id, full_name}
 //   platform:   {action:'create_shop', name, slug, city?, admin_username, admin_full_name, admin_password}
-//               | {action:'update_shop', shop_id, name, city?, contact_name?, contact_phone?, contact_email?, notes?}
+//               | {action:'update_shop', shop_id, name, city, contact_name, contact_phone, contact_email, notes}
+//                 (every field is replaced; any omitted or empty one becomes null)
 //               | {action:'set_shop_active', shop_id, active}
 //               | {action:'delete_shop', shop_id, confirm_name}   (shop must be deactivated first)
 //               | the user actions above on any shop's users; 'create' also takes shop_id
@@ -94,7 +95,7 @@ Deno.serve(async (req) => {
     return target;
   }
 
-  // ---------- Shop admin ----------
+  // ---------- User actions (shop admins, and the platform on any shop) ----------
   if (body.action === 'create') {
     // A shop admin always creates in their own shop; only the platform chooses the shop.
     let shopId: string = callerProfile!.shop_id;
@@ -195,7 +196,7 @@ Deno.serve(async (req) => {
     const { data: shop } = await admin.from('shops').select('name, active').eq('id', shopId).maybeSingle();
     if (!shop) return json(400, { error: 'Sastrería no encontrada' });
     if (shop.active) return json(400, { error: 'Primero desactiva la sastrería' });
-    if (String(body.confirm_name ?? '').trim() !== shop.name) return json(400, { error: 'El nombre no coincide' });
+    if (String(body.confirm_name ?? '').trim().normalize('NFC') !== String(shop.name).normalize('NFC')) return json(400, { error: 'El nombre no coincide' });
 
     // Every step is safe to repeat, so a failed run is finished by running it again.
     const { data: profileIds, error: dataError } = await admin.rpc('delete_shop_data', { p_shop: shopId });

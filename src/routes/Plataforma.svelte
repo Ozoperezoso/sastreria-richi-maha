@@ -2,7 +2,7 @@
   // El Sastre itself: every shop on the platform with its usage, and a form to add a new shop.
   // The platform never sees tickets or customers, only counts; the database enforces that.
   import { listShops, platformShopStats, adminUsers } from '../lib/api.js';
-  import { formatDate, formatCount, relativeDays } from '../lib/format.js';
+  import { formatTimestampDate, formatCount, countNoun, relativeDays } from '../lib/format.js';
 
   let shops = $state([]);
   let stats = $state({});
@@ -18,7 +18,6 @@
 
   const activeCount = $derived(shops.filter((s) => s.active).length);
   const ticketsThisMonth = $derived(Object.values(stats).reduce((sum, row) => sum + (Number(row.tickets_this_month) || 0), 0));
-  const plural = (n, one, many) => `${formatCount(n)} ${Number(n) === 1 ? one : many}`;
 
   /** 'Sastrería El Botón' → 'el-boton'. */
   function slugify(text) {
@@ -91,13 +90,13 @@
               <a class="shop" class:off={!shop.active} href={`#/plataforma/${shop.id}`}>
                 <span class="head">
                   <span class="name"><b>{shop.name}</b>
-                    <span class="muted">{shop.city ? `${shop.city}, ` : ''}creada el {formatDate(shop.created_at)}</span></span>
+                    <span class="muted">{shop.city ? `${shop.city}, ` : ''}creada el {formatTimestampDate(shop.created_at)}</span></span>
                   <span class="badge" class:badge-off={!shop.active}>{shop.active ? 'Activa' : 'Desactivada'}</span>
                 </span>
                 <span class="facts">
-                  <span><b class="num">{plural(row.tailors_active ?? 0, 'sastre activo', 'sastres activos')}</b>,
-                    {formatCount(row.users_active ?? 0)} de {plural(row.users_total ?? 0, 'usuario', 'usuarios')}</span>
-                  <span><b class="num">{formatCount(row.tickets_this_month ?? 0)}</b> {Number(row.tickets_this_month) === 1 ? 'arreglo' : 'arreglos'} este mes</span>
+                  <span><b class="num">{countNoun(row.tailors_active ?? 0, 'sastre activo', 'sastres activos')}</b>,
+                    {formatCount(row.users_active ?? 0)} de {countNoun(row.users_total ?? 0, 'usuario', 'usuarios')} activos</span>
+                  <span><b class="num">{countNoun(row.tickets_this_month ?? 0, 'arreglo', 'arreglos')}</b> este mes</span>
                   <span>Última actividad: <b>{relativeDays(row.last_activity_at)}</b></span>
                 </span>
                 <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>

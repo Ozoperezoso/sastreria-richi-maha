@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import {
   formatCOP, parseCOPInput, formatDate, displayNumber, statusLabel, locationLabel, todayISO, relativeDays, formatCount,
+  formatTimestampDate, countNoun,
 } from '../../src/lib/format.js';
 
 describe('formatCOP', () => {
@@ -90,5 +91,21 @@ describe('formatCount', () => {
     expect(formatCount(0)).toBe('0');
     expect(formatCount(null)).toBe('0');
     expect(formatCount(1234567)).toBe('1.234.567');
+  });
+});
+
+describe('formatTimestampDate', () => {
+  test('shows the Bogota calendar day, not the UTC one', () => {
+    expect(formatTimestampDate('2026-11-10T02:00:00Z')).toBe('9/11/2026');
+    expect(formatTimestampDate('2026-11-10T05:00:00Z')).toBe('10/11/2026');
+    expect(formatTimestampDate(null)).toBe('');
+  });
+});
+
+describe('countNoun', () => {
+  test('is singular only for exactly one', () => {
+    expect(countNoun(1, 'usuario', 'usuarios')).toBe('1 usuario');
+    expect(countNoun(0, 'usuario', 'usuarios')).toBe('0 usuarios');
+    expect(countNoun(2693, 'arreglo', 'arreglos')).toBe('2.693 arreglos');
   });
 });

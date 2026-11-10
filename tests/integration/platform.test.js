@@ -122,6 +122,16 @@ describe('platform shop deletion', () => {
     }).toEqual(before);
   });
 
+  test('delete_shop accepts the confirmation name in decomposed unicode form', async () => {
+    const slug = nextSlug();
+    const { shopId } = await throwawayShop(platform, slug);
+    await call(platform, { action: 'set_shop_active', shop_id: shopId, active: false });
+    const name = `Sastrería ${slug}`;
+    expect(name.normalize('NFD')).not.toBe(name);
+    const res = await call(platform, { action: 'delete_shop', shop_id: shopId, confirm_name: name.normalize('NFD') });
+    expect(res).toEqual({ status: 200, body: { ok: true } });
+  });
+
   test('a shop admin cannot delete shops', async () => {
     const res = await call(await signedIn('admin'), {
       action: 'delete_shop', shop_id: LA_UNION, confirm_name: 'Sastrería La Unión',

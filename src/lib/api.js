@@ -169,7 +169,7 @@ export async function platformShopUsers(shopId) {
 /** Platform: one shop. */
 export async function getShop(shopId) {
   return unwrap(await supabase.from('shops').select('id, slug, name, city, active, created_at')
-    .eq('id', shopId).single());
+    .eq('id', shopId).maybeSingle());
 }
 
 /** Platform: who to call at a shop; null when none has been saved. */

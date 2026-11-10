@@ -4,7 +4,7 @@
   import Modal from '../components/Modal.svelte';
   import MonthBars from '../components/MonthBars.svelte';
   import { getShop, getShopContact, platformShopStats, platformShopUsers, adminUsers } from '../lib/api.js';
-  import { formatDate, formatCount, relativeDays } from '../lib/format.js';
+  import { formatDate, formatCount, formatTimestampDate, countNoun, relativeDays } from '../lib/format.js';
   import { notify } from '../lib/toast.svelte.js';
   import { navigate } from '../lib/router.svelte.js';
 
@@ -27,7 +27,6 @@
 
   const ROLE = { admin: 'Administrador', tailor: 'Sastre' };
   const telHref = (phone) => `tel:${String(phone).replace(/[^\d+]/g, '')}`;
-  const plural = (n, one, many) => `${formatCount(n)} ${Number(n) === 1 ? one : many}`;
 
   async function load() {
     const id = params.id;
@@ -86,7 +85,7 @@
   }
 
   // Deleting is permanent: the server also checks that the shop is deactivated and the name matches.
-  const canDelete = $derived(String(form.typed ?? '').trim() === shop?.name);
+  const canDelete = $derived(String(form.typed ?? '').trim().normalize('NFC') === shop?.name.normalize('NFC'));
   async function deleteShop(event) {
     event.preventDefault();
     if (!canDelete) return;
@@ -153,11 +152,13 @@
       <span class="loading-row sk-block"></span>
     </div>
     <p class="visually-hidden" role="status">Cargando…</p>
+  {:else if !shop}
+    <p class="empty">Esta sastrería ya no existe. <a href="#/">Volver a la lista de sastrerías</a></p>
   {:else}
     <header class="head">
       <div class="who">
         <h1>{shop.name}</h1>
-        <p class="muted">{shop.city ? `${shop.city}, ` : ''}código <b>{shop.slug}</b>, creada el {formatDate(shop.created_at)}</p>
+        <p class="muted">{shop.city ? `${shop.city}, ` : ''}código <b>{shop.slug}</b>, creada el {formatTimestampDate(shop.created_at)}</p>
         <span class="badge" class:badge-off={!shop.active}>{shop.active ? 'Activa' : 'Desactivada'}</span>
       </div>
       <div class="buttons">
@@ -194,7 +195,7 @@
 
     <section class="panel" aria-labelledby="h-usuarios">
       <div class="section-head">
-        <h2 id="h-usuarios">Usuarios <span class="muted count">{plural(users.length, 'usuario', 'usuarios')}</span></h2>
+        <h2 id="h-usuarios">Usuarios <span class="muted count">{countNoun(users.length, 'usuario', 'usuarios')}</span></h2>
         <button class="btn btn-indigo" onclick={() => open('new', null, { username: '', full_name: '', role: 'tailor', password: '' })}>Nuevo usuario</button>
       </div>
       {#if users.length === 0}
@@ -205,7 +206,7 @@
             <li class:inactive={!user.active}>
               <div class="info">
                 <strong>{user.full_name}</strong>
-                <span class="muted">{user.username}, {ROLE[user.role] ?? user.role}, {user.active ? 'activo' : 'Inactivo'}</span>
+                <span class="muted">{user.username}, {ROLE[user.role] ?? user.role}, {user.active ? 'Activo' : 'Inactivo'}</span>
                 <span class="muted">{user.last_sign_in_at ? `Último ingreso: ${relativeDays(user.last_sign_in_at)}` : 'Nunca ha entrado'}</span>
               </div>
               <div class="buttons">
@@ -268,7 +269,7 @@
     </div>
   {:else if dialog === 'delete'}
     <form class="stack" onsubmit={deleteShop}>
-      <p>Se borrarán para siempre <b>{formatCount(stats?.tickets_total ?? 0)} arreglos, {formatCount(stats?.customers_total ?? 0)} clientes y {formatCount(stats?.users_total ?? 0)} usuarios</b>. Escribe el nombre exacto de la sastrería para confirmar.</p>
+      <p>Se borrarán para siempre <b>{countNoun(stats?.tickets_total ?? 0, 'arreglo', 'arreglos')}, {countNoun(stats?.customers_total ?? 0, 'cliente', 'clientes')} y {countNoun(stats?.users_total ?? 0, 'usuario', 'usuarios')}</b>. Escribe el nombre exacto de la sastrería para confirmar.</p>
       <label class="field"><span>Nombre de la sastrería</span>
         <input class="input" bind:value={form.typed} autocomplete="off" autocapitalize="none" placeholder={shop?.name} /></label>
       {#if formError}<p class="error" role="alert">{formError}</p>{/if}

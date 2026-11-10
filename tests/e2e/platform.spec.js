@@ -69,6 +69,14 @@ test('a shop admin is sent away from a shop page', async ({ page }) => {
   await expect(page).toHaveURL(/#\/$/);
 });
 
+test('a shop that no longer exists says so', async ({ page }) => {
+  await login(page, 'plataforma');
+  await page.goto('/#/plataforma/00000000-0000-0000-0000-0000000000ff');
+  await expect(page.getByText('Esta sastrería ya no existe.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reintentar' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Volver a la lista de sastrerías' })).toBeVisible();
+});
+
 test('delete is disabled while the shop is active', async ({ page }) => {
   await login(page, 'plataforma');
   await page.goto(`/#/plataforma/${LA_UNION_ID}`);
@@ -110,7 +118,7 @@ test('the platform deactivates and deletes a shop by typing its name', async ({ 
 
   await page.getByRole('button', { name: 'Eliminar sastrería' }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog).toContainText('Se borrarán para siempre 0 arreglos, 0 clientes y 1 usuarios.');
+  await expect(dialog).toContainText('Se borrarán para siempre 0 arreglos, 0 clientes y 1 usuario.');
   const confirm = dialog.getByRole('button', { name: 'Eliminar Sastrería Para Borrar' });
   await dialog.getByLabel('Nombre de la sastrería').fill('sastrería para borrar');
   await expect(confirm).toBeDisabled();

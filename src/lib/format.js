@@ -30,6 +30,9 @@ export function parseCOPInput(text) {
   return Number(cleaned.replace(/\./g, ''));
 }
 
+/** A count with its noun, singular for exactly one: (1, 'usuario', 'usuarios') → '1 usuario'. */
+export const countNoun = (count, one, many) => `${formatCount(count)} ${Number(count) === 1 ? one : many}`;
+
 export function formatDate(iso) {
   if (!iso) return '';
   const [year, month, day] = String(iso).slice(0, 10).split('-');
@@ -40,6 +43,9 @@ export function formatDate(iso) {
 export function todayISO(now = new Date()) {
   return new Date(now.getTime() - 5 * 3_600_000).toISOString().slice(0, 10);
 }
+
+/** A database timestamp (UTC) shown as the Bogota calendar date: '2026-11-10T02:00:00Z' → '9/11/2026'. */
+export const formatTimestampDate = (timestamp) => (timestamp ? formatDate(todayISO(new Date(timestamp))) : '');
 
 export function addDays(iso, days) {
   const date = new Date(`${iso}T00:00:00Z`);

@@ -14,13 +14,14 @@ Especificación: `docs/superpowers/specs/2026-10-31-sastreria-app-design.md`. Pl
 | Tarea 15: producción | **Publicado** (detalles abajo) |
 | Pantallas de plataforma (página por sastrería, usuarios, eliminar) | **Hecho en local**; **pendiente de aplicar en producción** (ver abajo) |
 
-En la última ejecución pasaron todas las pruebas: base de datos (pgTAP) 56, unitarias 62, integración 15, de extremo a extremo 13. GitHub Actions las corre en cada PR y en cada push a `main` (`.github/workflows/tests.yml`).
+En la última ejecución pasaron todas las pruebas: base de datos (pgTAP) 81, unitarias 69, integración 33, de extremo a extremo 21. GitHub Actions las corre en cada PR y en cada push a `main` (`.github/workflows/tests.yml`).
 
 ## Producción
 
 - App: **https://el-sastre.mahalaksmya.workers.dev** (Cloudflare Workers).
 - Base de datos: proyecto de Supabase `el-sastre`, con las migraciones 0001–0007 y la función `admin-users`.
 - **Pendiente de aplicar en producción:** la migración `0008` (estadísticas y usuarios para la plataforma, contacto de cada sastrería) y los cambios de `admin-users` (editar sastrería, gestionar usuarios, eliminar sastrería), además de la app nueva. Hay que aplicarlas con la cuenta de Mahalaksmy (proyecto `el-sastre`); esto no se ha hecho.
+- **Orden para publicar este cambio (importa):** 1) aplicar la migración 0008 (`supabase db push`); 2) publicar la función (`supabase functions deploy admin-users`); 3) publicar la app. La lista nueva de la plataforma llama a `platform_shop_stats`, que crea la migración 0008; si la app se publica primero, la pantalla Plataforma falla porque esa función aún no existe. Después de publicar, revisa la fila de La Unión: debe mostrar unos 2.693 arreglos en total.
 - Datos de La Unión importados: 2.693 arreglos y 2.143 clientes. El próximo número es el 2717.
 - **Las dos cuentas (Supabase y Cloudflare) son personales de Mahalaksmy.** La configuración de la publicación en Cloudflare no está en el repositorio.
 - Desde que existe producción, **las migraciones 0001–0007 no se vuelven a editar**: todo cambio va en una migración nueva (`0009_…` en adelante; la `0008` ya existe en el repositorio, aunque aún no está en producción).

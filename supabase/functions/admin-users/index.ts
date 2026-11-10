@@ -1,11 +1,15 @@
 // User and shop management. Holds the service-role key; never exposed to browsers.
-// A shop's admin manages the users of their own shop. The platform (El Sastre) creates and switches shops.
+// A shop's admin manages the users of their own shop. The platform (El Sastre) manages shops and,
+// with the same user actions, the users of any shop.
 // POST body:
 //   shop admin: {action:'create', username, full_name, role, password}
 //               | {action:'reset_password', user_id, password} | {action:'set_active', user_id, active}
+//               | {action:'rename_user', user_id, full_name}
 //   platform:   {action:'create_shop', name, slug, city?, admin_username, admin_full_name, admin_password}
-//               | {action:'set_shop_active', shop_id, active} | {action:'reset_password', user_id, password}
+//               | {action:'update_shop', shop_id, name, city?, contact_name?, contact_phone?, contact_email?, notes?}
+//               | {action:'set_shop_active', shop_id, active}
 //               | {action:'delete_shop', shop_id, confirm_name}   (shop must be deactivated first)
+//               | the user actions above on any shop's users; 'create' also takes shop_id
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -92,9 +96,15 @@ Deno.serve(async (req) => {
 
   // ---------- Shop admin ----------
   if (body.action === 'create') {
-    if (!isShopAdmin) return json(403, { error: 'Solo el administrador de la sastrería' });
+    // A shop admin always creates in their own shop; only the platform chooses the shop.
+    let shopId: string = callerProfile!.shop_id;
+    if (isPlatform) {
+      const { data: shop } = await admin.from('shops').select('id').eq('id', String(body.shop_id ?? '')).maybeSingle();
+      if (!shop) return json(400, { error: 'Sastrería no encontrada' });
+      shopId = shop.id;
+    }
     const result = await createUser(String(body.username ?? '').trim(), String(body.full_name ?? '').trim(),
-      body.role, body.password, callerProfile!.shop_id);
+      body.role, body.password, shopId);
     if (result.error) return json(400, { error: result.error });
     return json(200, { ok: true, user_id: result.userId });
   }
@@ -109,7 +119,6 @@ Deno.serve(async (req) => {
   }
 
   if (body.action === 'set_active') {
-    if (!isShopAdmin) return json(403, { error: 'Solo el administrador de la sastrería' });
     const active = body.active === true;
     if (!active && body.user_id === caller.id) return json(400, { error: 'No puedes desactivarte a ti mismo' });
     if (!(await manageableUser(String(body.user_id)))) return json(400, { error: 'Usuario no encontrado' });
@@ -118,6 +127,16 @@ Deno.serve(async (req) => {
     if (error || !updated?.length) return json(400, { error: 'Usuario no encontrado' });
     // Banning blocks new sign-ins and token refreshes; RLS already blocks data access.
     await admin.auth.admin.updateUserById(String(body.user_id), { ban_duration: active ? 'none' : BANNED_FOREVER });
+    return json(200, { ok: true });
+  }
+
+  if (body.action === 'rename_user') {
+    const fullName = String(body.full_name ?? '').trim();
+    if (!fullName) return json(400, { error: 'Escribe el nombre completo' });
+    if (!(await manageableUser(String(body.user_id)))) return json(400, { error: 'Usuario no encontrado' });
+    const { data: updated, error } = await admin
+      .from('profiles').update({ full_name: fullName }).eq('id', String(body.user_id)).select('id');
+    if (error || !updated?.length) return json(400, { error: 'Usuario no encontrado' });
     return json(200, { ok: true });
   }
 
@@ -143,6 +162,23 @@ Deno.serve(async (req) => {
       return json(400, { error: result.error });
     }
     return json(200, { ok: true, shop_id: shop.id, user_id: result.userId });
+  }
+
+  if (body.action === 'update_shop') {
+    if (!isPlatform) return json(403, { error: 'Solo la plataforma' });
+    const text = (value: unknown) => String(value ?? '').trim() || null;
+    const name = String(body.name ?? '').trim();
+    if (!name) return json(400, { error: 'Escribe el nombre de la sastrería' });
+    // The slug is the shop's permanent code and is never updated here.
+    const { data: updated, error } = await admin.from('shops')
+      .update({ name, city: text(body.city) }).eq('id', String(body.shop_id)).select('id');
+    if (error || !updated?.length) return json(400, { error: 'Sastrería no encontrada' });
+    const { error: contactError } = await admin.from('shop_contacts').upsert({
+      shop_id: updated[0].id, contact_name: text(body.contact_name), contact_phone: text(body.contact_phone),
+      contact_email: text(body.contact_email), notes: text(body.notes), updated_at: new Date().toISOString(),
+    });
+    if (contactError) return json(500, { error: 'No se pudo guardar el contacto' });
+    return json(200, { ok: true });
   }
 
   if (body.action === 'set_shop_active') {

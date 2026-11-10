@@ -6,7 +6,12 @@
   let shop = $state(null);
   let error = $state('');
 
-  getShop(params.id).then((row) => { shop = row; }).catch((e) => { error = e.message; });
+  async function load() {
+    try {
+      shop = await getShop(params.id);
+    } catch (e) { error = e.message; }
+  }
+  load();
 </script>
 
 <main class="page page-wide">

@@ -57,6 +57,7 @@ One row per shop:
 | `users_active` | Active profiles |
 | `tailors_active` | Active profiles with role `tailor` (a likely billing unit) |
 | `tickets_total` | All tickets of the shop |
+| `customers_total` | All customers of the shop (a count only; used by the delete dialog) |
 | `tickets_this_month` | Tickets whose `received_on` falls in the current month in Bogotá time (`today_bogota()`) |
 | `months` | `jsonb` array of the last 6 months, oldest first: `[{"month": "2026-06", "tickets": 120}, …]`, months without tickets included as 0 |
 | `last_activity_at` | The latest of: any ticket's `updated_at`, and any of its users' `auth.users.last_sign_in_at`. Null if neither exists |
